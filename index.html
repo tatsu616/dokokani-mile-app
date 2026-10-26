@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>JAL どこかにマイル 羽田発・全35空港 行き先お得度＆マイル単価チェッカー</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+  <!-- Header -->
+  <header class="app-header">
+    <div class="header-inner">
+      <div>
+        <div class="brand-badge">✈️ JALマイレージバンク 国内線特典航空券ガチャ攻略ツール</div>
+        <h1 class="brand-title">どこかにマイル 行き先お得度＆マイル価値チェッカー</h1>
+        <p class="brand-subtitle">
+          東京（羽田）発・対象<strong>全6エリア35空港</strong>の航空券運賃（片道・往復）、通常特典マイル比較、1マイル価値、4空港ガチャ期待値を一目で比較
+        </p>
+      </div>
+      <div class="header-stats" id="header-stats">
+        <!-- JSで動的に描画 -->
+      </div>
+    </div>
+  </header>
+
+  <main class="main-container">
+
+    <!-- 設定・フィルタコントロールパネル -->
+    <section class="control-panel" aria-label="表示設定と絞り込み">
+      <div class="control-grid">
+
+        <!-- 比較運賃・プラン選択 -->
+        <div class="control-group">
+          <div class="control-label">🎫 運賃比較モード・必要マイル切替</div>
+          <div class="segmented-control">
+            <button type="button" class="seg-btn active" data-plan="saver">
+              セイバー運賃比較（7,000マイル）
+              <small>早期割引の実勢価格と比較</small>
+            </button>
+            <button type="button" class="seg-btn" data-plan="flex">
+              直前・普通運賃比較（7,000マイル）
+              <small>直前予約・フレックス価格と比較</small>
+            </button>
+            <button type="button" class="seg-btn" data-plan="southern">
+              南の島・セール基準（6,000マイル）
+              <small>キャンペーン時等の6,000マイル換算</small>
+            </button>
+          </div>
+        </div>
+
+        <!-- 表示モード選択 -->
+        <div class="control-group">
+          <div class="control-label">📊 表示モード切替</div>
+          <div class="segmented-control">
+            <button type="button" class="seg-btn active" data-view="by-area">
+              ✈️ 就航エリア別
+              <small>全国6エリアごとに一覧比較</small>
+            </button>
+            <button type="button" class="seg-btn" data-view="ranking">
+              🏆 全35空港ランキング表
+              <small>テーブルで一括比較</small>
+            </button>
+            <button type="button" class="seg-btn" data-view="map">
+              🗺️ 全国フライト路線図
+              <small>日本地図・航路距離で把握</small>
+            </button>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- エリアフィルタ・検索・並び替え -->
+      <div class="filter-row">
+        <div class="line-pills" role="group" aria-label="就航エリアフィルタ">
+          <button type="button" class="line-pill active" data-area="all">すべて（35空港）</button>
+          <button type="button" class="line-pill" data-area="北海道">
+            <span class="line-dot" style="background: var(--area-hokkaido);"></span>北海道（6）
+          </button>
+          <button type="button" class="line-pill" data-area="東北">
+            <span class="line-dot" style="background: var(--area-tohoku);"></span>東北（4）
+          </button>
+          <button type="button" class="line-pill" data-area="中部・北陸・近畿">
+            <span class="line-dot" style="background: var(--area-central);"></span>中部・北陸・近畿（5）
+          </button>
+          <button type="button" class="line-pill" data-area="中国・四国">
+            <span class="line-dot" style="background: var(--area-chushikoku);"></span>中国・四国（8）
+          </button>
+          <button type="button" class="line-pill" data-area="九州・奄美">
+            <span class="line-dot" style="background: var(--area-kyushu);"></span>九州・奄美（8）
+          </button>
+          <button type="button" class="line-pill" data-area="沖縄・先島">
+            <span class="line-dot" style="background: var(--area-okinawa);"></span>沖縄・先島（4）
+          </button>
+        </div>
+
+        <div class="search-sort-group">
+          <span id="result-count-label" style="font-size:0.8rem; font-weight:700; color:var(--text-sub);">表示中：35 空港</span>
+          <input type="search" id="search-input" class="search-input" placeholder="🔍 空港名・3レター(ISG/CTS)・県名・観光地で検索..." />
+          <select id="sort-select" class="sort-select" aria-label="並び替え">
+            <option value="area">並び順：北からエリア順</option>
+            <option value="fare-desc">並び順：お得度・運賃が高い順</option>
+            <option value="fare-asc">並び順：運賃が安い・近い順</option>
+            <option value="miles-desc">並び順：通常特典マイルが多い順</option>
+            <option value="dist-desc">並び順：区間マイル（距離）が遠い順</option>
+            <option value="time-asc">並び順：フライト時間が短い順</option>
+          </select>
+        </div>
+      </div>
+    </section>
+
+    <!-- 4空港ガチャ期待値シミュレーター＆日本全国フライトマップ -->
+    <section class="simulator-section" id="simulator-section" aria-label="4空港ガチャ期待値シミュレーター">
+      <div class="sim-header">
+        <div class="sim-title-wrap">
+          <h2 class="sim-title">🎯 4空港ガチャ期待値シミュレーター ＆ 全国フライトマップ</h2>
+          <span class="sim-badge" id="sim-count-badge">0 / 4 空港選択中</span>
+        </div>
+        <div class="sim-actions">
+          <button type="button" class="btn-action btn-gacha" id="btn-random-gacha">
+            🎲 ランダムに4空港ガチャを引く
+          </button>
+          <button type="button" class="btn-action btn-final-draw" id="btn-final-draw" style="display: none;">
+            ✈️ この4空港から1空港を抽選！
+          </button>
+          <button type="button" class="btn-action btn-clear" id="btn-clear-sim">
+            クリア
+          </button>
+        </div>
+      </div>
+
+      <div class="sim-body-grid">
+        <div class="sim-left-col">
+          <div class="sim-slots" id="sim-slots" style="margin-bottom: 0;">
+            <!-- JSで4スロット描画 -->
+          </div>
+          <div id="sim-winner-area"></div>
+          <div id="sim-result-area">
+            <!-- JSで期待値・判定結果描画 -->
+          </div>
+        </div>
+
+        <!-- 日本全国（北海道〜沖縄・先島）フライトマップ -->
+        <div class="sim-map-card">
+          <div class="sim-map-header">
+            <div class="sim-map-title">
+              🗾 日本全国 行き先候補フライトマップ
+              <span style="font-size: 0.72rem; font-weight: 500; color: var(--text-muted);">（地図上の空港クリックでも選択可）</span>
+            </div>
+          </div>
+          <div class="geo-svg-wrap" id="sim-geo-map-container">
+            <!-- JSでSVG日本地図＆色分けフライト航路を描画 -->
+          </div>
+          <div class="sim-map-legend">
+            <span class="legend-line-item"><span class="legend-line-bar" style="background: #0284c7;"></span>北海道</span>
+            <span class="legend-line-item"><span class="legend-line-bar" style="background: #0d9488;"></span>東北</span>
+            <span class="legend-line-item"><span class="legend-line-bar" style="background: #4f46e5;"></span>中部・北陸・近畿</span>
+            <span class="legend-line-item"><span class="legend-line-bar" style="background: #d97706;"></span>中国・四国</span>
+            <span class="legend-line-item"><span class="legend-line-bar" style="background: #e11d48;"></span>九州・奄美</span>
+            <span class="legend-line-item"><span class="legend-line-bar" style="background: #9333ea;"></span>沖縄・先島</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- メイン表示エリア（エリア別 / ランキング表 / フライト路線図） -->
+    <div id="main-view-content"></div>
+
+    <!-- 補足・ルール解説 -->
+    <aside class="info-box">
+      <h3>📌 JAL「どこかにマイル」（羽田発）の運賃・必要マイル・攻略ポイント</h3>
+      <ul>
+        <li><strong>往復一律 7,000マイルの圧倒的コスパ：</strong>通常のJAL国内線特典航空券では、羽田〜沖縄（那覇）が往復<strong>19,000マイル〜</strong>、羽田〜石垣・宮古が往復<strong>21,000マイル〜</strong>、羽田〜札幌・福岡が往復<strong>17,000マイル〜</strong>必要ですが、「どこかにマイル」ならどの空港が当たっても<strong>往復7,000マイル（最大66.7%マイル削減）</strong>で発券できます。</li>
+        <li><strong>1マイル＝5円〜10円超の超高単価：</strong>有償航空券（セイバー運賃）でも往復4万円〜6万円台になる<strong>石垣・宮古・奄美大島・女満別・釧路</strong>などが当たれば、1マイルの価値は<strong>7円〜9円以上</strong>（直前フレックス運賃基準なら<strong>1マイル＝12円超</strong>）に跳ね上がります。</li>
+        <li><strong>4空港ガチャの引き直し（再検索）テクニック：</strong>検索時に提示された4つの候補空港が気に入らない場合は再検索が可能です（1日の検索回数上限あり）。出発時間帯（午前・午後など）を少し変えて検索すると、空席状況の違いから<strong>沖縄・北海道・九州などの遠距離空港</strong>が混ざりやすくなります。</li>
+        <li><strong>当日空港でのアップグレードも可能：</strong>「どこかにマイル」は普通席での予約ですが、搭乗当日に空港で空席があれば、追加料金（＋1,100円〜3,300円）で<strong>クラスJ</strong>、または<strong>ファーストクラス</strong>への当日アップグレードも利用可能です。</li>
+      </ul>
+    </aside>
+
+  </main>
+
+  <script src="map-data.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
