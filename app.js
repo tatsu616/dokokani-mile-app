@@ -1,5 +1,17 @@
 // 東京（羽田）発 JAL「どこかにマイル」対象 全6エリア・35空港データ
-// セイバー運賃（早期割引実勢目安）・フレックス（普通/直前運賃目安）・通常特典航空券（基本マイル）基準
+// セイバー運賃（早期割引実勢目安）・フレックス（普通/直前運賃目安）・通常特典航空券（基本マイル）
+// ＋ 往路（羽田出発時間）・復路（羽田到着時間）の5枠運航スケジュールデータ
+
+const TIME_SLOTS_ORDER = ["t1", "t2", "t3", "t4", "t5"];
+
+const TIME_SLOT_META = {
+  all: { id: "all", label: "時間指定なし", short: "指定なし", sub: "全時間帯" },
+  t1:  { id: "t1",  label: "05:00～08:59", short: "05-08", sub: "早朝" },
+  t2:  { id: "t2",  label: "09:00～11:59", short: "09-11", sub: "午前" },
+  t3:  { id: "t3",  label: "12:00～15:59", short: "12-15", sub: "午後" },
+  t4:  { id: "t4",  label: "16:00～18:59", short: "16-18", sub: "夕方" },
+  t5:  { id: "t5",  label: "19:00～23:59", short: "19-23", sub: "夜間" }
+};
 
 const AREA_META = {
   "北海道": {
@@ -18,7 +30,7 @@ const AREA_META = {
     color: "#4f46e5",
     bgLight: "#e0e7ff",
     aircraft: "B787 / B767 / B737",
-    desc: "小松・名古屋（中部）・伊丹・関西・南紀白浜の5空港。パンダと温泉の南紀白浜は隠れた人気リゾート枠！"
+    desc: "小松・名古屋（中部）・伊丹・関西・南紀白浜の5空港。時間帯を絞ることで中部・関西・山形などの近距離を外すことも可能！"
   },
   "中国・四国": {
     color: "#d97706",
@@ -30,72 +42,90 @@ const AREA_META = {
     color: "#e11d48",
     bgLight: "#ffe4e6",
     aircraft: "A350-900 / B787 / B767 / B737",
-    desc: "福岡・長崎・熊本・大分・宮崎・鹿児島・北九州に加え、世界自然遺産の「奄美大島」直行便も対象の大人気エリア！"
+    desc: "福岡・長崎・熊本・大分・宮崎・鹿児島・北九州に加え、世界自然遺産の「奄美大島（1日1往復）」直行便も対象！"
   },
   "沖縄・先島": {
     color: "#9333ea",
     bgLight: "#f3e8ff",
     aircraft: "A350-900 / B787 / B767 / B737",
-    desc: "那覇・久米島（夏期）・宮古・石垣の4空港。通常往復19,000〜21,000マイル必要な南国リゾートが7,000マイルになるSSRゾーン！"
+    desc: "那覇・久米島（夏期）・宮古・石垣の4空港。宮古・石垣・久米島は運航時間帯が決まっているため時間帯指定が攻略のカギ！"
   }
 };
 
+// outSlots: 往路（羽田出発時刻）が存在する時間帯枠
+// inSlots:  復路（羽田到着時刻）が存在する時間帯枠
 const AIRPORTS = [
   // ① 北海道エリア（6空港）
   {
     id: "mmb", code: "MMB", area: "北海道", order: 1, name: "女満別", pref: "北海道（道東）",
     distMiles: 609, mins: 105, flights: "1日3往復",
+    outSlots: ["t1", "t2", "t4"], outTimes: "07:05 / 11:15 / 17:05発",
+    inSlots:  ["t2", "t3", "t5"], inTimes:  "11:30 / 15:50 / 21:40着",
     saverOneWay: 25800, flexOneWay: 47800, stdAwardRound: 17000,
     tags: ["知床世界遺産", "網走監獄", "流氷・オホーツク", "超大当たり"],
-    tip: "知床・網走・屈斜路湖への玄関口！通常運賃が非常に高く、当たれば1マイル＝7円超のSSR枠"
+    tip: "知床・網走・屈斜路湖への玄関口！往路は朝・午前・夕方、復路は午前・午後・夜着の3往復"
   },
   {
     id: "kuh", code: "KUH", area: "北海道", order: 2, name: "釧路", pref: "北海道（道東）",
     distMiles: 555, mins: 100, flights: "1日3往復",
+    outSlots: ["t1", "t3", "t4"], outTimes: "07:40 / 12:25 / 17:15発",
+    inSlots:  ["t2", "t4", "t5"], inTimes:  "11:55 / 16:50 / 21:35着",
     saverOneWay: 24900, flexOneWay: 46500, stdAwardRound: 17000,
     tags: ["釧路湿原", "阿寒湖温泉", "和商市場（勝手丼）", "超大当たり"],
-    tip: "たんちょう釧路空港。釧路湿原ノロッコ号や阿寒湖温泉、炉端焼き・海鮮グルメが絶品"
+    tip: "たんちょう釧路空港。09-11発には便がなく、早朝・午後・夕方発の3往復で運航"
   },
   {
     id: "akj", code: "AKJ", area: "北海道", order: 3, name: "旭川", pref: "北海道（道北）",
     distMiles: 576, mins: 100, flights: "1日4往復",
+    outSlots: ["t1", "t2", "t4"], outTimes: "06:30 / 07:55 / 11:15 / 17:45発",
+    inSlots:  ["t2", "t3", "t5"], inTimes:  "10:55 / 12:20 / 15:45 / 22:15着",
     saverOneWay: 23500, flexOneWay: 45200, stdAwardRound: 17000,
     tags: ["旭山動物園", "富良野・美瑛", "旭川ラーメン", "大当たり"],
-    tip: "就航率99%を誇る雪に強い空港！美瑛の青い池・富良野・層雲峡温泉へのドライブ拠点に最高"
+    tip: "就航率99%を誇る雪に強い空港！早朝2便・午前1便・夕方1便の計4往復"
   },
   {
     id: "obo", code: "OBO", area: "北海道", order: 4, name: "帯広", pref: "北海道（十勝）",
     distMiles: 526, mins: 95, flights: "1日4往復",
+    outSlots: ["t1", "t2", "t3", "t4"], outTimes: "07:35 / 11:35 / 14:35 / 18:10発",
+    inSlots:  ["t2", "t3", "t4", "t5"], inTimes:  "11:40 / 15:45 / 18:50 / 22:15着",
     saverOneWay: 23200, flexOneWay: 44600, stdAwardRound: 17000,
     tags: ["十勝豚丼", "六花亭・スイーツ", "モール温泉", "大当たり"],
-    tip: "十勝川温泉（植物性モール温泉）や豚丼・六花亭本店などグルメ満足度が北海道屈指"
+    tip: "十勝川温泉や豚丼・六花亭本店などグルメ満足度抜群！バランス良く4枠で運航"
   },
   {
     id: "cts", code: "CTS", area: "北海道", order: 5, name: "札幌（新千歳）", pref: "北海道（道央）",
     distMiles: 510, mins: 95, flights: "1日16往復",
+    outSlots: ["t1", "t2", "t3", "t4", "t5"], outTimes: "06:25〜20:35発（全時間帯）",
+    inSlots:  ["t2", "t3", "t4", "t5"],       inTimes:  "09:30〜23:00着（09時以降全枠）",
     saverOneWay: 18800, flexOneWay: 41500, stdAwardRound: 17000,
     tags: ["A350主力路線", "札幌・小樽・登別", "空港グルメ＆温泉"],
-    tip: "最新鋭A350-900が多く投入される幹線！空港内のグルメ・温泉だけでも1日遊べる人気枠"
+    tip: "最新鋭A350-900が投入される大幹線！ほぼ全ての時間帯枠で候補に入りやすい王道枠"
   },
   {
     id: "hkd", code: "HKD", area: "北海道", order: 6, name: "函館", pref: "北海道（道南）",
     distMiles: 424, mins: 80, flights: "1日3往復",
+    outSlots: ["t1", "t3", "t4"], outTimes: "07:45 / 12:35 / 17:35発",
+    inSlots:  ["t2", "t4", "t5"], inTimes:  "11:20 / 16:15 / 21:10着",
     saverOneWay: 19400, flexOneWay: 38600, stdAwardRound: 15000,
     tags: ["函館山夜景", "五稜郭", "湯の川温泉", "朝市海鮮"],
-    tip: "空港から湯の川温泉まで車で約10分・函館駅まで約20分とアクセス抜群！車なし旅にも最適"
+    tip: "空港から湯の川温泉まで車で約10分・函館駅まで約20分とアクセス抜群！早朝・午後・夕方発の3往復"
   },
 
   // ② 東北エリア（4空港）
   {
     id: "aoj", code: "AOJ", area: "東北", order: 1, name: "青森", pref: "青森県",
     distMiles: 358, mins: 75, flights: "1日6往復",
+    outSlots: ["t1", "t2", "t3", "t4", "t5"], outTimes: "07:15 / 09:40 / 12:40 / 15:15 / 17:45 / 19:50発",
+    inSlots:  ["t2", "t3", "t4", "t5"],       inTimes:  "10:35 / 13:05 / 16:10 / 18:45 / 21:10 / 22:45着",
     saverOneWay: 16200, flexOneWay: 34200, stdAwardRound: 15000,
     tags: ["ねぶたの家", "弘前城", "酸ヶ湯温泉", "青森魚菜センター"],
-    tip: "新幹線で3時間かかる青森へわずか75分！ねぶた・弘前・八甲田山への周遊に便利"
+    tip: "新幹線で3時間かかる青森へわずか75分！1日6往復あり往路は全5枠をカバー"
   },
   {
     id: "msj", code: "MSJ", area: "東北", order: 2, name: "三沢", pref: "青森県",
     distMiles: 355, mins: 75, flights: "1日4往復",
+    outSlots: ["t1", "t2", "t3", "t4"], outTimes: "07:10 / 10:40 / 15:35 / 18:55発",
+    inSlots:  ["t2", "t3", "t4", "t5"], inTimes:  "10:30 / 14:00 / 18:55 / 22:10着",
     saverOneWay: 16500, flexOneWay: 34800, stdAwardRound: 15000,
     tags: ["奥入瀬渓流", "十和田湖", "星野リゾート青森屋", "三沢航空科学館"],
     tip: "大人気の「星野リゾート 青森屋」や奥入瀬渓流・八戸エリアへの拠点として実は超優秀！"
@@ -103,50 +133,64 @@ const AIRPORTS = [
   {
     id: "axt", code: "AXT", area: "東北", order: 3, name: "秋田", pref: "秋田県",
     distMiles: 279, mins: 65, flights: "1日4往復",
+    outSlots: ["t1", "t2", "t3", "t5"], outTimes: "07:35 / 11:10 / 15:10 / 19:10発",
+    inSlots:  ["t2", "t3", "t4", "t5"], inTimes:  "10:35 / 14:05 / 18:05 / 21:55着",
     saverOneWay: 15400, flexOneWay: 31800, stdAwardRound: 15000,
     tags: ["角館・田沢湖", "乳頭温泉郷", "男鹿なまはげ", "きりたんぽ"],
-    tip: "秋田新幹線だと約3時間50分かかるところ飛行機なら65分！時間短縮効果が非常に大きい路線"
+    tip: "秋田新幹線だと約3時間50分かかるところ飛行機なら65分！往路16-18枠のみ便なし"
   },
   {
     id: "gaj", code: "GAJ", area: "東北", order: 4, name: "山形", pref: "山形県",
     distMiles: 190, mins: 60, flights: "1日2往復",
+    outSlots: ["t1", "t4"], outTimes: "07:15 / 16:20発",
+    inSlots:  ["t2", "t5"], inTimes:  "09:50 / 19:05着",
     saverOneWay: 13200, flexOneWay: 25600, stdAwardRound: 13000,
     tags: ["銀山温泉", "蔵王温泉", "山寺", "さくらんぼ東根"],
-    tip: "おいしい山形空港。空港から銀山温泉・蔵王・山寺へのアクセスが良くレンタカー旅に最適"
+    tip: "朝夕の1日2往復のみ。往路09-15または復路12-18を選ぶと山形は候補から外れます"
   },
 
   // ③ 中部・北陸・近畿エリア（5空港）
   {
     id: "kmq", code: "KMQ", area: "中部・北陸・近畿", order: 1, name: "小松", pref: "石川県",
     distMiles: 211, mins: 60, flights: "1日4往復",
+    outSlots: ["t1", "t2", "t3", "t5"], outTimes: "07:45 / 09:50 / 15:05 / 19:45発",
+    inSlots:  ["t2", "t3", "t4"],       inTimes:  "09:00 / 10:35 / 13:05 / 18:05着",
     saverOneWay: 12800, flexOneWay: 26800, stdAwardRound: 13000,
     tags: ["金沢・兼六園", "加賀温泉郷", "近江町市場", "永平寺・恐竜博物館"],
-    tip: "金沢市内へリムジンバスで約40分、山代・山中・片山津の加賀温泉郷へもすぐの好立地"
+    tip: "金沢・加賀温泉郷へ好アクセス。復路の羽田19時以降着（t5）には便がないのが特徴"
   },
   {
     id: "ngo", code: "NGO", area: "中部・北陸・近畿", order: 2, name: "名古屋（中部）", pref: "愛知県",
     distMiles: 193, mins: 60, flights: "1日2往復",
+    outSlots: ["t1", "t4"], outTimes: "08:05 / 18:55発",
+    inSlots:  ["t1", "t5"], inTimes:  "08:50 / 21:55着",
     saverOneWay: 11200, flexOneWay: 23400, stdAwardRound: 11000,
     tags: ["セントレア空港体験", "伊勢神宮アクセス", "名古屋めし", "近距離注意"],
-    tip: "全35空港で最も近い空港。フライト・オブ・ドリームズ見学や高速船で津・伊勢志摩へ抜けるのも◎"
+    tip: "全35空港で最も近い路線。往路09-15または復路09-18を指定すれば完全に候補から除外可能！"
   },
   {
     id: "itm", code: "ITM", area: "中部・北陸・近畿", order: 3, name: "大阪（伊丹）", pref: "大阪府・兵庫県",
     distMiles: 280, mins: 65, flights: "1日15往復",
+    outSlots: ["t1", "t2", "t3", "t4", "t5"], outTimes: "06:30〜19:30発（全時間帯）",
+    inSlots:  ["t1", "t2", "t3", "t4", "t5"], inTimes:  "08:15〜21:30着（全時間帯）",
     saverOneWay: 12600, flexOneWay: 27600, stdAwardRound: 13000,
     tags: ["大阪・京都・神戸", "USJ", "A350運航便あり", "市街地至近"],
-    tip: "梅田・なんば・京都へリムジンバス直結！便数が多くスケジュール自由度が抜群の幹線"
+    tip: "1日15往復の大幹線のため、早朝から夜まで全5枠すべてに便が存在します"
   },
   {
     id: "kix", code: "KIX", area: "中部・北陸・近畿", order: 4, name: "大阪（関西）", pref: "大阪府",
     distMiles: 280, mins: 75, flights: "1日3往復",
+    outSlots: ["t1", "t3", "t5"], outTimes: "07:10 / 14:35 / 20:25発",
+    inSlots:  ["t1", "t2", "t5"], inTimes:  "07:50 / 10:35 / 22:30着",
     saverOneWay: 12600, flexOneWay: 27600, stdAwardRound: 13000,
     tags: ["和歌山・高野山", "堺・泉州", "りんくうアウトレット", "なんば特急ラピート"],
-    tip: "難波へラピートで34分！和歌山・高野山・淡路島方面へのドライブ拠点としても便利"
+    tip: "往路09-11・16-18や復路12-18には便がないため、時間帯指定で除外しやすい路線"
   },
   {
     id: "shm", code: "SHM", area: "中部・北陸・近畿", order: 5, name: "南紀白浜", pref: "和歌山県",
     distMiles: 303, mins: 70, flights: "1日3往復",
+    outSlots: ["t1", "t2", "t4"], outTimes: "07:40 / 11:45 / 16:35発",
+    inSlots:  ["t2", "t3", "t5"], inTimes:  "10:40 / 14:50 / 19:45着",
     saverOneWay: 16800, flexOneWay: 33800, stdAwardRound: 13000,
     tags: ["白良浜ビーチ", "アドベンチャーワールド", "白浜温泉", "熊野古道"],
     tip: "どこかにマイルの隠れた大人気リゾート！空港から白浜温泉・海・テーマパークまで車で5〜10分"
@@ -156,78 +200,100 @@ const AIRPORTS = [
   {
     id: "okj", code: "OKJ", area: "中国・四国", order: 1, name: "岡山", pref: "岡山県",
     distMiles: 356, mins: 75, flights: "1日5往復",
+    outSlots: ["t1", "t2", "t3", "t4", "t5"], outTimes: "07:05 / 09:35 / 13:30 / 17:45 / 19:55発",
+    inSlots:  ["t1", "t2", "t3", "t4", "t5"], inTimes:  "08:25 / 10:40 / 13:05 / 17:05 / 21:15着",
     saverOneWay: 15800, flexOneWay: 34600, stdAwardRound: 15000,
     tags: ["倉敷美観地区", "後楽園・岡山城", "直島・瀬戸内アート", "フルーツ王国"],
-    tip: "岡山桃太郎空港。倉敷美観地区や直島（宇野港）、さらには四国・香川方面へも出やすい万能拠点"
+    tip: "1日5往復が5つの時間帯に1便ずつ綺麗に分散しており、どの時間帯でも候補に入りやすい空港"
   },
   {
     id: "izo", code: "IZO", area: "中国・四国", order: 2, name: "出雲", pref: "島根県",
     distMiles: 405, mins: 85, flights: "1日5往復",
+    outSlots: ["t1", "t2", "t3", "t4"],       outTimes: "07:10 / 09:40 / 13:15 / 16:35 / 18:55発",
+    inSlots:  ["t1", "t2", "t3", "t4", "t5"], inTimes:  "08:50 / 11:00 / 13:25 / 17:00 / 20:25着",
     saverOneWay: 18600, flexOneWay: 37800, stdAwardRound: 15000,
     tags: ["出雲大社", "玉造温泉", "松江城・宍道湖", "出雲そば", "大当たり"],
-    tip: "出雲縁結び空港！寝台特急サンライズ出雲でも人気の聖地へ85分。玉造温泉と出雲大社巡りに最高"
+    tip: "出雲縁結び空港！玉造温泉と出雲大社巡りに最高（往路19時以降発のみ便なし）"
   },
   {
     id: "hij", code: "HIJ", area: "中国・四国", order: 3, name: "広島", pref: "広島県",
     distMiles: 414, mins: 85, flights: "1日8往復",
+    outSlots: ["t1", "t2", "t3", "t4", "t5"], outTimes: "06:55〜19:55発（全時間帯）",
+    inSlots:  ["t1", "t2", "t3", "t4", "t5"], inTimes:  "08:50〜21:50着（全時間帯）",
     saverOneWay: 16400, flexOneWay: 35800, stdAwardRound: 15000,
     tags: ["厳島神社（宮島）", "尾道・しまなみ海道", "お好み焼き・牡蠣", "竹原"],
-    tip: "広島市内・宮島はもちろん、空港から尾道・しまなみ海道や竹原（安芸の小京都）へも好アクセス"
+    tip: "1日8往復で全5枠を完全カバー。広島市内・宮島・尾道しまなみ海道への拠点に"
   },
   {
     id: "ubj", code: "UBJ", area: "中国・四国", order: 4, name: "山口宇部", pref: "山口県",
     distMiles: 510, mins: 95, flights: "1日4往復",
+    outSlots: ["t1", "t3", "t4"], outTimes: "07:20 / 12:00 / 14:35 / 18:50発",
+    inSlots:  ["t2", "t4", "t5"], inTimes:  "11:25 / 16:00 / 18:45 / 21:20着",
     saverOneWay: 18200, flexOneWay: 38800, stdAwardRound: 15000,
     tags: ["角島大橋", "元乃隅神社", "秋吉台・萩", "下関ふぐ・瓦そば"],
-    tip: "絶景の角島大橋・元乃隅神社や長門湯本温泉（星野リゾート界 長門）、下関・門司港レトロへも回れる"
+    tip: "絶景の角島大橋・元乃隅神社や長門湯本温泉へ。往路09-11と復路12-15には便がありません"
   },
   {
     id: "tks", code: "TKS", area: "中国・四国", order: 5, name: "徳島", pref: "徳島県",
     distMiles: 329, mins: 75, flights: "1日7往復",
+    outSlots: ["t1", "t2", "t3", "t4", "t5"], outTimes: "07:45〜19:55発（全時間帯）",
+    inSlots:  ["t1", "t2", "t3", "t4", "t5"], inTimes:  "08:35〜21:55着（全時間帯）",
     saverOneWay: 16200, flexOneWay: 34400, stdAwardRound: 15000,
     tags: ["大塚国際美術館", "鳴門の渦潮", "徳島ラーメン", "淡路島アクセス"],
-    tip: "徳島阿波おどり空港。世界の名画が揃う「大塚国際美術館」や鳴門の渦潮、淡路島ドライブに大人気"
+    tip: "1日7往復で全時間帯を網羅！大塚国際美術館や鳴門の渦潮、淡路島ドライブに大人気"
   },
   {
     id: "tak", code: "TAK", area: "中国・四国", order: 6, name: "高松", pref: "香川県",
     distMiles: 354, mins: 80, flights: "1日7往復",
+    outSlots: ["t1", "t2", "t3", "t4", "t5"], outTimes: "07:35〜20:00発（全時間帯）",
+    inSlots:  ["t1", "t2", "t3", "t4", "t5"], inTimes:  "08:40〜21:55着（全時間帯）",
     saverOneWay: 16200, flexOneWay: 34800, stdAwardRound: 15000,
     tags: ["讃岐うどん巡り", "金刀比羅宮", "栗林公園", "小豆島・直島"],
-    tip: "うどん県への直行便！こんぴらさん参拝＆琴平温泉、フェリーで小豆島・直島へ渡る島旅にも最適"
+    tip: "うどん県への直行便！1日7往復で全時間帯に対応し、小豆島・直島フェリー旅にも最適"
   },
   {
     id: "kcz", code: "KCZ", area: "中国・四国", order: 7, name: "高知", pref: "高知県",
     distMiles: 393, mins: 80, flights: "1日5往復",
+    outSlots: ["t1", "t2", "t3", "t4"],       outTimes: "07:35 / 09:40 / 12:25 / 16:10 / 18:55発",
+    inSlots:  ["t1", "t2", "t3", "t4", "t5"], inTimes:  "08:40 / 11:25 / 13:30 / 16:15 / 19:55着",
     saverOneWay: 18400, flexOneWay: 37400, stdAwardRound: 15000,
     tags: ["ひろめ市場・カツオ藁焼き", "桂浜", "仁淀ブルー", "四万十川"],
-    tip: "高知龍馬空港。夜の「ひろめ市場」で食べる塩タタキと地酒は感動もの！鉄道だと遠いため飛行機が圧倒的お得"
+    tip: "夜の「ひろめ市場」で食べる塩タタキは感動もの！往路19時以降発（t5）のみ便なし"
   },
   {
     id: "myj", code: "MYJ", area: "中国・四国", order: 8, name: "松山", pref: "愛媛県",
     distMiles: 438, mins: 85, flights: "1日6往復",
+    outSlots: ["t1", "t2", "t3", "t4", "t5"], outTimes: "07:15〜19:40発（全時間帯）",
+    inSlots:  ["t1", "t2", "t3", "t4", "t5"], inTimes:  "08:50〜21:45着（全時間帯）",
     saverOneWay: 17800, flexOneWay: 37200, stdAwardRound: 15000,
     tags: ["道後温泉本館", "松山城", "下灘駅", "宇和島鯛めし"],
-    tip: "日本最古の名湯・道後温泉へバス直結！夕日の絶景駅「下灘駅」や鯛めし・みかんジュース蛇口も楽しい"
+    tip: "日本最古の名湯・道後温泉へバス直結！1日6往復で往路・復路ともに全5枠をカバー"
   },
 
   // ⑤ 九州・奄美エリア（8空港）
   {
     id: "fuk", code: "FUK", area: "九州・奄美", order: 1, name: "福岡", pref: "福岡県",
     distMiles: 567, mins: 110, flights: "1日17往復",
+    outSlots: ["t1", "t2", "t3", "t4", "t5"], outTimes: "06:20〜20:00発（全時間帯）",
+    inSlots:  ["t1", "t2", "t3", "t4", "t5"], inTimes:  "08:45〜22:45着（全時間帯）",
     saverOneWay: 19200, flexOneWay: 42800, stdAwardRound: 17000,
     tags: ["博多駅まで地下鉄5分", "もつ鍋・屋台・とんこつ", "太宰府天満宮", "A350幹線"],
-    tip: "空港から博多駅まで地下鉄5分・天神まで11分の日本一便利な空港！グルメ旅なら大当たり枠"
+    tip: "空港から博多駅まで地下鉄5分の日本一便利な空港！全5枠でいつでも狙える九州の大幹線"
   },
   {
     id: "kkj", code: "KKJ", area: "九州・奄美", order: 2, name: "北九州", pref: "福岡県",
     distMiles: 534, mins: 105, flights: "1日5往復",
+    outSlots: ["t1", "t2", "t3", "t4", "t5"], outTimes: "07:20 / 09:50 / 13:25 / 18:25 / 20:15発",
+    inSlots:  ["t1", "t2", "t3", "t4", "t5"], inTimes:  "08:30 / 11:35 / 14:00 / 17:35 / 22:40着",
     saverOneWay: 17600, flexOneWay: 39800, stdAwardRound: 15000,
     tags: ["門司港レトロ", "小倉グルメ・旦過市場", "皿倉山夜景", "下関・唐戸市場"],
-    tip: "海上空港で夜遅い便も充実。門司港レトロの焼きカレーや連絡船で5分の下関・唐戸市場寿司が最高"
+    tip: "海上空港で早朝〜深夜便まで全5枠に1便ずつ配置。門司港レトロや下関・唐戸市場へ好アクセス"
   },
   {
     id: "oit", code: "OIT", area: "九州・奄美", order: 3, name: "大分", pref: "大分県",
     distMiles: 499, mins: 100, flights: "1日6往復",
+    outSlots: ["t1", "t2", "t3", "t4", "t5"], outTimes: "07:55〜19:45発（全時間帯）",
+    inSlots:  ["t2", "t3", "t4", "t5"],       inTimes:  "09:30〜21:30着（09時以降全枠）",
     saverOneWay: 18600, flexOneWay: 39600, stdAwardRound: 15000,
     tags: ["別府温泉郷", "由布院温泉", "関アジ・関サバ・とり天", "地獄めぐり"],
     tip: "おんせん県おおいた！空港から別府・湯布院へ直通バスあり。温泉好きにはたまらない当たり枠"
@@ -235,13 +301,17 @@ const AIRPORTS = [
   {
     id: "ngs", code: "NGS", area: "九州・奄美", order: 4, name: "長崎", pref: "長崎県",
     distMiles: 610, mins: 115, flights: "1日6往復",
+    outSlots: ["t1", "t2", "t3", "t4", "t5"], outTimes: "07:25〜19:50発（全時間帯）",
+    inSlots:  ["t2", "t3", "t4", "t5"],       inTimes:  "09:35〜22:05着（09時以降全枠）",
     saverOneWay: 21400, flexOneWay: 44800, stdAwardRound: 17000,
     tags: ["稲佐山夜景", "ハウステンボス", "雲仙温泉", "ちゃんぽん・佐世保", "大当たり"],
-    tip: "世界新三大夜景の長崎市内やハウステンボス（空港から高速船・バス直結）、雲仙温泉まで見どころ満載"
+    tip: "世界新三大夜景の長崎市内やハウステンボス、雲仙温泉まで見どころ満載の長距離路線"
   },
   {
     id: "kmj", code: "KMJ", area: "九州・奄美", order: 5, name: "熊本", pref: "熊本県",
     distMiles: 568, mins: 110, flights: "1日8往復",
+    outSlots: ["t1", "t2", "t3", "t4", "t5"], outTimes: "06:25〜19:50発（全時間帯）",
+    inSlots:  ["t2", "t3", "t4", "t5"],       inTimes:  "09:20〜22:15着（09時以降全枠）",
     saverOneWay: 20400, flexOneWay: 43600, stdAwardRound: 17000,
     tags: ["阿蘇カルデラ・草千里", "黒川温泉", "熊本城", "馬刺し・あか牛丼", "大当たり"],
     tip: "新しくなった阿蘇くまもと空港！阿蘇ドライブ・黒川温泉・天草イルカウォッチングの拠点に抜群"
@@ -249,6 +319,8 @@ const AIRPORTS = [
   {
     id: "kmi", code: "KMI", area: "九州・奄美", order: 6, name: "宮崎", pref: "宮崎県",
     distMiles: 561, mins: 105, flights: "1日6往復",
+    outSlots: ["t1", "t2", "t3", "t4", "t5"], outTimes: "06:50〜19:45発（全時間帯）",
+    inSlots:  ["t2", "t3", "t4", "t5"],       inTimes:  "09:20〜22:15着（09時以降全枠）",
     saverOneWay: 20200, flexOneWay: 43200, stdAwardRound: 17000,
     tags: ["高千穂峡", "青島神社・日南海岸", "チキン南蛮・宮崎牛・地鶏", "大当たり"],
     tip: "宮崎ブーゲンビリア空港。JR宮崎駅まで電車で10分！日南海岸ドライブや高千穂峡、絶品グルメが充実"
@@ -256,6 +328,8 @@ const AIRPORTS = [
   {
     id: "koj", code: "KOJ", area: "九州・奄美", order: 7, name: "鹿児島", pref: "鹿児島県",
     distMiles: 601, mins: 115, flights: "1日8往復",
+    outSlots: ["t1", "t2", "t3", "t4", "t5"], outTimes: "06:25〜19:45発（全時間帯）",
+    inSlots:  ["t2", "t3", "t4", "t5"],       inTimes:  "09:20〜22:20着（09時以降全枠）",
     saverOneWay: 20800, flexOneWay: 44200, stdAwardRound: 17000,
     tags: ["桜島", "指宿砂むし温泉", "霧島温泉・霧島神宮", "黒豚・しろくま", "大当たり"],
     tip: "霧島温泉郷へ車で約30分！桜島フェリーや指宿の砂むし温泉、黒豚しゃぶしゃぶ・芋焼酎を堪能"
@@ -263,51 +337,63 @@ const AIRPORTS = [
   {
     id: "asj", code: "ASJ", area: "九州・奄美", order: 8, name: "奄美大島", pref: "鹿児島県（奄美）",
     distMiles: 789, mins: 145, flights: "1日1往復",
+    outSlots: ["t2"], outTimes: "11:25発のみ（09-11枠限定）",
+    inSlots:  ["t4"], inTimes:  "16:40着のみ（16-18枠限定）",
     saverOneWay: 27400, flexOneWay: 51200, stdAwardRound: 19000,
     tags: ["世界自然遺産", "マングローブカヌー", "アマミブルーの海", "鶏飯", "超大当たり"],
-    tip: "羽田から1日1往復の超プレミアム直行便！通常特典19,000マイル・有償往復5.4万円超のSSR離島枠"
+    tip: "1日1往復限定！奄美を狙うなら往路「09:00～11:59」・復路「16:00～18:59」（または指定なし）が必須条件"
   },
 
   // ⑥ 沖縄・先島エリア（4空港）
   {
     id: "oka", code: "OKA", area: "沖縄・先島", order: 1, name: "沖縄（那覇）", pref: "沖縄県（本島）",
     distMiles: 984, mins: 165, flights: "1日12往復",
+    outSlots: ["t1", "t2", "t3", "t4", "t5"], outTimes: "06:25〜19:55発（全時間帯）",
+    inSlots:  ["t2", "t3", "t4", "t5"],       inTimes:  "10:05〜23:00着（09時以降全枠）",
     saverOneWay: 22800, flexOneWay: 48600, stdAwardRound: 19000,
     tags: ["美ら海水族館", "国際通り・首里城", "慶良間ブルー", "A350主力", "大当たり"],
-    tip: "通常特典航空券なら往復19,000マイル〜必要な那覇路線が7,000マイル！便数も多く冬でも暖かい王道枠"
+    tip: "通常特典なら往復19,000マイル〜必要な那覇路線が7,000マイル！1日12往復あり幅広い時間帯で出現"
   },
   {
     id: "ueo", code: "UEO", area: "沖縄・先島", order: 2, name: "久米島", pref: "沖縄県（離島）",
-    distMiles: 1020, mins: 170, flights: "夏期直行便（7〜8月）", seasonal: "夏期限定",
+    distMiles: 1020, mins: 170, flights: "夏期1往復", seasonal: "夏期限定",
+    outSlots: ["t2"], outTimes: "11:05発のみ（09-11枠限定）",
+    inSlots:  ["t4"], inTimes:  "18:10着のみ（16-18枠限定）",
     saverOneWay: 27200, flexOneWay: 52400, stdAwardRound: 19000,
     tags: ["はての浜", "ウミガメ館", "海洋深層水スパ", "車エビ", "超大当たり"],
-    tip: "夏季（7〜8月頃）のみ羽田直行便が運航されるレア離島！360度エメラルドグリーンの「はての浜」は一生モノの絶景"
+    tip: "夏季（7〜8月）のみ運航される羽田直行便！奄美と同じく往路「09:00～11:59」・復路「16:00～18:59」限定"
   },
   {
     id: "mmy", code: "MMY", area: "沖縄・先島", order: 3, name: "宮古", pref: "沖縄県（宮古島）",
     distMiles: 1158, mins: 185, flights: "1日1往復",
+    outSlots: ["t1"], outTimes: "06:55発のみ（05-08枠限定）",
+    inSlots:  ["t5"], inTimes:  "22:35着のみ（19-23枠限定）",
     saverOneWay: 29400, flexOneWay: 56800, stdAwardRound: 21000,
     tags: ["宮古ブルー・与那覇前浜", "伊良部大橋", "ウミガメシュノーケル", "全空港2位SSR"],
-    tip: "全35空港お得度No.2！通常特典なら往復21,000マイル（3倍）必要な東洋一美しい海へ直行3時間"
+    tip: "1日1往復（JTA021/022）！宮古を狙うなら往路「05:00～08:59」・復路「19:00～23:59」（または指定なし）が必須"
   },
   {
     id: "isg", code: "ISG", area: "沖縄・先島", order: 4, name: "石垣", pref: "沖縄県（八重山）",
     distMiles: 1224, mins: 195, flights: "1日2往復",
+    outSlots: ["t1", "t3"], outTimes: "06:25 / 14:35発（05-08・12-15枠）",
+    inSlots:  ["t3", "t5"], inTimes:  "13:45 / 22:00着（12-15・19-23枠）",
     saverOneWay: 30800, flexOneWay: 59400, stdAwardRound: 21000,
     tags: ["川平湾・マンタ", "竹富島・西表島", "石垣牛", "全35空港1位SSR"],
-    tip: "堂々の全35空港お得度No.1（羽田から1,224マイル）！通常特典21,000マイルが7,000マイルになる最強SSR枠"
+    tip: "全35空港お得度No.1！往路は「05:00～08:59」か「12:00～15:59」、復路は「12:00～15:59」か「19:00～23:59」のみ運航"
   }
 ];
 
 // 状態管理
 const state = {
-  plan: "saver",      // "saver" (7000m), "flex" (7000m), "southern" (6000m)
-  view: "by-area",    // "by-area", "ranking", "map"
+  plan: "saver",        // "saver" (7000m), "flex" (7000m), "southern" (6000m)
+  view: "by-area",      // "by-area", "ranking", "map"
+  outTimeSlot: "all",   // 往路出発時間帯: "all", "t1", "t2", "t3", "t4", "t5"
+  inTimeSlot: "all",    // 復路到着時間帯: "all", "t1", "t2", "t3", "t4", "t5"
   areaFilter: "all",
   searchQuery: "",
-  sortBy: "area",     // "area", "fare-desc", "fare-asc", "miles-desc", "dist-desc", "time-asc"
-  selectedIds: [],    // 最大4空港
-  winnerId: null,     // 4空港から1空港抽選された決定空港ID
+  sortBy: "area",       // "area", "fare-desc", "fare-asc", "miles-desc", "dist-desc", "time-asc"
+  selectedIds: [],      // 最大4空港
+  winnerId: null,       // 4空港から1空港抽選された決定空港ID
   showAllMapLabels: false,
   // 地図の拡大縮小・パン状態（基準座標系: 640 x 780）
   mapZoom: 1.0,
@@ -347,19 +433,39 @@ const PLAN_CONFIG = {
   }
 };
 
+// 指定された往路出発時間帯・復路到着時間帯に羽田便が運航しているか判定
+function checkAirportTimeOperation(ap, outSlot = state.outTimeSlot, inSlot = state.inTimeSlot) {
+  const outOk = outSlot === "all" || ap.outSlots.includes(outSlot);
+  const inOk = inSlot === "all" || ap.inSlots.includes(inSlot);
+  let reason = "";
+  if (!outOk && !inOk) {
+    reason = "往復とも便なし";
+  } else if (!outOk) {
+    reason = "往路便なし";
+  } else if (!inOk) {
+    reason = "復路便なし";
+  }
+  return {
+    isOperating: outOk && inOk,
+    outOk,
+    inOk,
+    reason
+  };
+}
+
 // 空港ごとの計算値を取得
 function computeAirportMetrics(ap, planKey = state.plan) {
   const plan = PLAN_CONFIG[planKey];
   const oneWay = plan.useFlex ? ap.flexOneWay : ap.saverOneWay;
   const roundTrip = oneWay * 2;
-  const mileValue = roundTrip / plan.miles; // 1マイルあたりの価値（円/マイル）
-  const savedMiles = ap.stdAwardRound - plan.miles; // 節約できたマイル数
-  const mileSaveRate = (savedMiles / ap.stdAwardRound) * 100; // マイル削減率(%)
-  // 1マイル=1円換算時のお得額（円換算メリット）
+  const mileValue = roundTrip / plan.miles;
+  const savedMiles = ap.stdAwardRound - plan.miles;
+  const mileSaveRate = (savedMiles / ap.stdAwardRound) * 100;
   const cashSavings = roundTrip - plan.miles;
   const cashDiscountRate = (cashSavings / roundTrip) * 100;
+  const timeOp = checkAirportTimeOperation(ap);
 
-  // お得度ランク判定（セイバー往復運賃＆距離ベース）
+  // お得度ランク判定（セイバー往復運賃ベース）
   const baseSaverRound = ap.saverOneWay * 2;
   let rank = "B";
   let rankLabel = "B 安定お得";
@@ -390,7 +496,11 @@ function computeAirportMetrics(ap, planKey = state.plan) {
     cashSavings,
     cashDiscountRate,
     rank,
-    rankLabel
+    rankLabel,
+    isOperating: timeOp.isOperating,
+    outOk: timeOp.outOk,
+    inOk: timeOp.inOk,
+    excludeReason: timeOp.reason
   };
 }
 
@@ -407,6 +517,36 @@ function fmtMins(mins) {
   const h = Math.floor(mins / 60);
   const m = mins % 60;
   return h > 0 ? `約${h}時間${m > 0 ? m + "分" : ""}` : `約${m}分`;
+}
+
+// 時間帯プリセット一発適用
+function applyTimePreset(outSlot, inSlot) {
+  state.outTimeSlot = outSlot;
+  state.inTimeSlot = inSlot;
+
+  document.querySelectorAll("[data-out-slot]").forEach(btn => {
+    btn.classList.toggle("active", btn.getAttribute("data-out-slot") === outSlot);
+  });
+  document.querySelectorAll("[data-in-slot]").forEach(btn => {
+    btn.classList.toggle("active", btn.getAttribute("data-in-slot") === inSlot);
+  });
+
+  pruneExcludedSelectedAirports();
+  renderAll();
+}
+
+// 時間帯変更時に、運航対象外となった空港を選択中スロットから自動除外する
+function pruneExcludedSelectedAirports() {
+  const validSelected = state.selectedIds.filter(id => {
+    const ap = AIRPORTS.find(a => a.id === id);
+    return ap && checkAirportTimeOperation(ap).isOperating;
+  });
+  if (validSelected.length !== state.selectedIds.length) {
+    state.selectedIds = validSelected;
+    if (state.winnerId && !state.selectedIds.includes(state.winnerId)) {
+      state.winnerId = null;
+    }
+  }
 }
 
 // 現在のズーム・中心座標からSVGのviewBox文字列を計算
@@ -470,10 +610,14 @@ function resetMapZoom() {
   syncMapViewportDom();
 }
 
-// 地図上の空港クリック（ドラッグ直後の誤クリックを防止）
+// 地図上の空港クリック（時間帯対象外の空港は選択不可）
 function handleMapAirportClick(event, apId) {
   if (mapDragState.hasDragged) {
     event.stopPropagation();
+    return;
+  }
+  const rawAp = AIRPORTS.find(a => a.id === apId);
+  if (rawAp && !checkAirportTimeOperation(rawAp).isOperating) {
     return;
   }
   hideAirportTooltip();
@@ -516,6 +660,10 @@ function showAirportTooltip(event, apId) {
   const areaColor = AREA_META[ap.area].color;
   const selIdx = state.selectedIds.indexOf(ap.id);
 
+  const statusHtml = ap.isOperating
+    ? `<div style="font-size:0.7rem; color:#86efac; margin-bottom:3px;">✅ 選択中の時間帯で運航あり（往路: ${ap.outTimes} / 復路: ${ap.inTimes}）</div>`
+    : `<div style="font-size:0.72rem; color:#fca5a5; font-weight:800; margin-bottom:3px;">🚫 時間帯対象外（${ap.excludeReason}）— 往路: ${ap.outTimes} / 復路: ${ap.inTimes}</div>`;
+
   el.innerHTML = `
     <div class="tooltip-header">
       <span class="tooltip-st-name">
@@ -530,9 +678,7 @@ function showAirportTooltip(event, apId) {
         <span style="color:#fbbf24; font-size:0.78rem; margin-left:4px;">(1m=${ap.mileValue.toFixed(1)}円)</span>
       </span>
     </div>
-    <div style="font-size:0.72rem; color:#86efac; margin-bottom:3px;">
-      🎫 通常特典: 往復${ap.stdAwardRound.toLocaleString()}m → <strong>${ap.savedMiles.toLocaleString()}m節約 (${ap.mileSaveRate.toFixed(0)}%OFF)</strong>
-    </div>
+    ${statusHtml}
     <div class="tooltip-meta">
       <span>📍 ${ap.pref}（${ap.distMiles}マイル）</span>
       <span>⏱ ${fmtMins(ap.mins)}</span>
@@ -570,7 +716,6 @@ function getFlightArcPath(targetId) {
   const dy = dest.y - hnd.y;
   const dist = Math.hypot(dx, dy) || 1;
 
-  // 北行きと西・南行きで自然なカーブ方向を設定
   const curveAmt = Math.min(55, dist * 0.16);
   const nx = -dy / dist;
   const ny = dx / dist;
@@ -581,14 +726,24 @@ function getFlightArcPath(targetId) {
   return `M${hnd.x},${hnd.y} Q${cx},${cy} ${dest.x},${dest.y}`;
 }
 
-// フィルタ＆ソート済み空港リスト取得
-function getFilteredAirports() {
-  let list = AIRPORTS.map(a => computeAirportMetrics(a, state.plan));
+// 現在の時間帯条件で運航している空港一覧を取得
+function getTimeOperatingAirports() {
+  return AIRPORTS
+    .map(a => computeAirportMetrics(a, state.plan))
+    .filter(a => a.isOperating);
+}
 
+// フィルタ＆ソート済み空港リスト取得（時間帯で運航していない路線は検索対象から除外）
+function getFilteredAirports() {
+  // 1. まず指定された往路・復路時間帯に羽田便が飛んでいる路線のみに絞り込む
+  let list = getTimeOperatingAirports();
+
+  // 2. エリアフィルタ
   if (state.areaFilter !== "all") {
     list = list.filter(a => a.area === state.areaFilter);
   }
 
+  // 3. キーワード検索
   if (state.searchQuery.trim() !== "") {
     const q = state.searchQuery.trim().toLowerCase();
     list = list.filter(a =>
@@ -601,7 +756,7 @@ function getFilteredAirports() {
     );
   }
 
-  // ソート
+  // 4. ソート
   list.sort((a, b) => {
     switch (state.sortBy) {
       case "fare-desc":
@@ -643,8 +798,12 @@ function getFareRankMap() {
   return rankMap;
 }
 
-// 4空港シミュレーターへの追加/解除
+// 4空港シミュレーターへの追加/解除（運航対象外の空港は追加不可）
 function toggleSelectAirport(id) {
+  const rawAp = AIRPORTS.find(a => a.id === id);
+  if (rawAp && !checkAirportTimeOperation(rawAp).isOperating) {
+    return;
+  }
   const idx = state.selectedIds.indexOf(id);
   if (idx >= 0) {
     state.selectedIds.splice(idx, 1);
@@ -658,9 +817,9 @@ function toggleSelectAirport(id) {
   renderAll();
 }
 
-// ランダム4空港ガチャを引く
+// ランダム4空港ガチャを引く（現在選択中の往路・復路時間帯に運航している空港プールからのみ抽選！）
 function drawRandomGacha() {
-  const pool = [...AIRPORTS];
+  const pool = getTimeOperatingAirports();
   const picked = [];
   while (picked.length < 4 && pool.length > 0) {
     const r = Math.floor(Math.random() * pool.length);
@@ -694,6 +853,77 @@ function getAirportGuideUrl(airportCode) {
   return `https://www.jal.co.jp/jp/ja/dom/airport/${airportCode.toLowerCase()}/`;
 }
 
+// 時間帯フィルターのステータスバー（運航対象数・除外された路線一覧）を描画
+function renderTimeFilterStatus() {
+  const container = document.getElementById("time-filter-status");
+  if (!container) return;
+
+  const allMetrics = AIRPORTS.map(a => computeAirportMetrics(a, state.plan));
+  const operatingList = allMetrics.filter(a => a.isOperating);
+  const excludedList = allMetrics.filter(a => !a.isOperating);
+
+  const outMeta = TIME_SLOT_META[state.outTimeSlot];
+  const inMeta = TIME_SLOT_META[state.inTimeSlot];
+  const plan = PLAN_CONFIG[state.plan];
+
+  const avgRound = operatingList.length > 0
+    ? Math.round(operatingList.reduce((acc, a) => acc + a.activeRoundTrip, 0) / operatingList.length)
+    : 0;
+  const avgMileVal = (avgRound / plan.miles).toFixed(2);
+
+  // エリアピルの件数バッジも現在の時間帯対象数に同期更新
+  const areaBtns = document.querySelectorAll("[data-area]");
+  areaBtns.forEach(btn => {
+    const areaKey = btn.getAttribute("data-area");
+    if (areaKey === "all") {
+      btn.innerHTML = `すべて（${operatingList.length}空港）`;
+    } else {
+      const cnt = operatingList.filter(a => a.area === areaKey).length;
+      const color = AREA_META[areaKey].color;
+      btn.innerHTML = `<span class="line-dot" style="background: ${color};"></span>${areaKey}（${cnt}）`;
+    }
+  });
+
+  if (excludedList.length === 0) {
+    container.innerHTML = `
+      <div class="time-status-top">
+        <div>
+          ✅ <strong>現在の時間帯条件：</strong>往路 <code>${outMeta.label}</code> ／ 復路 <code>${inMeta.label}</code>
+          — <strong>全35空港すべてが検索・ガチャ対象です</strong>
+        </div>
+        <div style="font-weight:700; color:var(--jal-red-dark);">
+          プール平均往復：${fmtYen(avgRound)}（1マイル＝${avgMileVal}円）
+        </div>
+      </div>
+    `;
+    return;
+  }
+
+  const excludedChipsHtml = excludedList.map(ap => `
+    <span class="excluded-chip" title="往路: ${ap.outTimes} / 復路: ${ap.inTimes}">
+      <span>🚫 ${ap.name}(${ap.code})</span>
+      <span class="reason-tag">[${ap.excludeReason}]</span>
+    </span>
+  `).join("");
+
+  container.innerHTML = `
+    <div class="time-status-top">
+      <div>
+        🎯 <strong>現在の時間帯条件：</strong>往路 <code style="color:#c8102e; font-weight:800;">${outMeta.label}</code> × 復路 <code style="color:#0284c7; font-weight:800;">${inMeta.label}</code>
+        → <strong>運航対象：<span style="color:#16a34a; font-size:0.95rem;">${operatingList.length}空港</span> / 全35空港</strong>
+        <span style="color:#dc2626; font-weight:700; margin-left:6px;">（${excludedList.length}空港を検索対象から除外中）</span>
+      </div>
+      <div style="font-weight:800; color:var(--jal-red-dark);">
+        対象${operatingList.length}空港の平均往復：${fmtYen(avgRound)}（1マイル＝${avgMileVal}円）
+      </div>
+    </div>
+    <div class="excluded-airports-wrap">
+      <span style="font-size:0.72rem; font-weight:800; color:#dc2626;">運航便なしのため除外された路線：</span>
+      ${excludedChipsHtml}
+    </div>
+  `;
+}
+
 // 日本全国SVG地理マップ＋色分けフライト航路図＋拡大縮小UIを生成
 function buildGeoMapSvg({ isLarge = false, showAllNames = false } = {}) {
   const selectedAirports = state.selectedIds
@@ -703,6 +933,7 @@ function buildGeoMapSvg({ isLarge = false, showAllNames = false } = {}) {
 
   const activeAreas = new Set(selectedAirports.map(a => a.area));
   const hasSelection = selectedAirports.length > 0;
+  const allMetrics = AIRPORTS.map(a => computeAirportMetrics(a, state.plan));
 
   // 1. 地域ポリゴン＆地域ラベル
   const regionPolys = JAPAN_MAP_REGIONS.map(r => {
@@ -719,15 +950,17 @@ function buildGeoMapSvg({ isLarge = false, showAllNames = false } = {}) {
     return `<text x="${r.lx}" y="${r.ly}" class="pref-label ${r.isTarget ? "target-label" : ""}">${r.name}</text>`;
   }).join("");
 
-  // 南西諸島エリアの区切り破線（鹿児島〜奄美・沖縄・先島）
   const insetDivider = `
     <path d="M24,615 L335,615 L365,645 L365,768" fill="none" stroke="#94a3b8" stroke-width="1.3" stroke-dasharray="5 4" opacity="0.7" />
     <text x="34" y="632" font-size="10.5" font-weight="800" fill="#64748b">🌺 奄美・沖縄・先島諸島エリア</text>
   `;
 
-  // 2. 全35空港へのベースフライトアーク
-  const baseFlightArcs = AIRPORTS.map(ap => {
+  // 2. 全35空港へのベースフライトアーク（時間帯対象外の路線は極薄点線に）
+  const baseFlightArcs = allMetrics.map(ap => {
     const pathD = getFlightArcPath(ap.id);
+    if (!ap.isOperating) {
+      return `<path d="${pathD}" fill="none" stroke="#cbd5e1" stroke-width="1" stroke-dasharray="3 3" opacity="0.22" />`;
+    }
     const color = AREA_META[ap.area].color;
     const isSel = state.selectedIds.includes(ap.id);
     const dimClass = hasSelection && !isSel ? "dimmed" : "";
@@ -743,15 +976,14 @@ function buildGeoMapSvg({ isLarge = false, showAllNames = false } = {}) {
 
   // 4. 全35空港のドット＆ホバーポップアップ対応
   const majorLandmarks = new Set(["mmb", "cts", "hkd", "aoj", "kmq", "itm", "shm", "izo", "hij", "tak", "fuk", "koj", "asj", "oka", "mmy", "isg"]);
-  const allMetrics = AIRPORTS.map(a => computeAirportMetrics(a, state.plan));
 
   const airportDots = allMetrics.map(ap => {
     const geo = AIRPORT_GEO[ap.id];
     if (!geo) return "";
-    const color = AREA_META[ap.area].color;
+    const color = ap.isOperating ? AREA_META[ap.area].color : "#cbd5e1";
     const isSel = state.selectedIds.includes(ap.id);
-    const r = isSel ? 6.5 : 4.5;
-    const showName = showAllNames || (!hasSelection && majorLandmarks.has(ap.id));
+    const r = isSel ? 6.5 : (ap.isOperating ? 4.5 : 3.2);
+    const showName = ap.isOperating && (showAllNames || (!hasSelection && majorLandmarks.has(ap.id)));
 
     let dx = 7, dy = 3, anchor = "start";
     if (["cts", "hkd", "axt", "kmq", "izo", "fuk", "ngs", "koj", "isg"].includes(ap.id)) {
@@ -764,9 +996,9 @@ function buildGeoMapSvg({ isLarge = false, showAllNames = false } = {}) {
          onmouseenter="showAirportTooltip(event, '${ap.id}')"
          onmousemove="moveAirportTooltip(event)"
          onmouseleave="hideAirportTooltip()"
-         style="cursor:pointer;">
+         style="cursor:${ap.isOperating ? "pointer" : "not-allowed"}; opacity:${ap.isOperating ? 1 : 0.45};">
         <circle cx="${geo.x}" cy="${geo.y}" r="10" fill="transparent" />
-        <circle cx="${geo.x}" cy="${geo.y}" r="${r}" fill="#ffffff" stroke="${color}" stroke-width="${isSel ? 3 : 2.2}" class="map-st-dot" />
+        <circle cx="${geo.x}" cy="${geo.y}" r="${r}" fill="${ap.isOperating ? "#ffffff" : "#e2e8f0"}" stroke="${color}" stroke-width="${isSel ? 3 : 2.2}" class="map-st-dot" />
         ${showName && !isSel ? `
           <text x="${geo.x + dx}" y="${geo.y + dy}" text-anchor="${anchor}" font-size="10" font-weight="800" fill="#1e293b" stroke="#ffffff" stroke-width="3" paint-order="stroke" style="pointer-events:none;">${ap.name}</text>
         ` : ""}
@@ -828,15 +1060,11 @@ function buildGeoMapSvg({ isLarge = false, showAllNames = false } = {}) {
          onmousemove="moveAirportTooltip(event)"
          onmouseleave="hideAirportTooltip()"
          style="cursor:pointer;">
-        <!-- パルスリング -->
         <circle cx="${geo.x}" cy="${geo.y}" r="${isWinner ? 15 : 12}" stroke="${badgeColor}" class="pulse-ring" />
-        <!-- 引き出し線 -->
         <line x1="${geo.x}" y1="${geo.y}" x2="${anchorX}" y2="${anchorY}" stroke="${badgeColor}" stroke-width="2" stroke-dasharray="3 2" />
-        <!-- 空港上の番号ピン -->
         <circle cx="${geo.x}" cy="${geo.y}" r="${isWinner ? 11 : 9.5}" fill="${badgeColor}" stroke="#ffffff" stroke-width="2.2" />
         <text x="${geo.x}" y="${geo.y + 3.8}" text-anchor="middle" font-size="11" font-weight="900" fill="#ffffff">${isWinner ? "★" : numStr}</text>
 
-        <!-- 吹き出しカード -->
         <g transform="translate(${bx}, ${by})">
           <rect x="0" y="0" width="${boxW}" height="${boxH}" rx="7" fill="${isWinner ? "#fffbeb" : "#ffffff"}" stroke="${badgeColor}" stroke-width="${isWinner ? 2.8 : 2}" filter="drop-shadow(0 3px 6px rgba(15,23,42,0.16))" />
           <rect x="0" y="0" width="22" height="${boxH}" rx="6" fill="${badgeColor}" />
@@ -861,53 +1089,39 @@ function buildGeoMapSvg({ isLarge = false, showAllNames = false } = {}) {
     </div>
     <div class="map-pan-hint ${isZoomed ? "visible" : ""}">✋ ドラッグで地図を移動できます</div>
     <svg viewBox="${vb}" class="geo-svg ${isLarge ? "large-map" : ""} ${isZoomed ? "is-zoomed" : ""}" role="img" aria-label="日本全国 JALどこかにマイル就航路線図と行き先候補マップ">
-      <!-- 海域ラベル -->
       <text x="210" y="260" font-size="13" font-weight="800" fill="#93c5fd" letter-spacing="0.2em">日本海</text>
       <text x="485" y="545" font-size="13" font-weight="800" fill="#93c5fd" letter-spacing="0.2em">太平洋</text>
 
-      <!-- 南西諸島エリア枠 -->
       ${insetDivider}
-
-      <!-- 地域ポリゴン -->
       <g>${regionPolys}</g>
-      <!-- 地域ラベル -->
       <g>${regionLabels}</g>
-
-      <!-- 全35空港フライトアーク -->
       <g>${baseFlightArcs}</g>
-
-      <!-- 選択中の空港へのアクティブ航路 -->
       <g>${activeFlightArcs}</g>
-
-      <!-- 全35空港ドット -->
       <g>${airportDots}</g>
-
-      <!-- 羽田空港（出発地） -->
       ${originMarker}
-
-      <!-- 選択された4空港の強調ピン＆吹き出し -->
       <g>${selectedOverlays}</g>
     </svg>
   `;
 }
 
-// ヘッダー統計の更新
+// ヘッダー統計の更新（現在の時間帯対象プールに連動）
 function renderHeaderStats() {
-  const allMetrics = AIRPORTS.map(a => computeAirportMetrics(a, state.plan));
-  const maxAp = allMetrics.reduce((m, a) => a.activeRoundTrip > m.activeRoundTrip ? a : m, allMetrics[0]);
-  const minAp = allMetrics.reduce((m, a) => a.activeRoundTrip < m.activeRoundTrip ? a : m, allMetrics[0]);
-  const avgRound = Math.round(allMetrics.reduce((acc, a) => acc + a.activeRoundTrip, 0) / allMetrics.length);
+  const opMetrics = getTimeOperatingAirports();
+  const baseList = opMetrics.length > 0 ? opMetrics : AIRPORTS.map(a => computeAirportMetrics(a, state.plan));
+  const maxAp = baseList.reduce((m, a) => a.activeRoundTrip > m.activeRoundTrip ? a : m, baseList[0]);
+  const minAp = baseList.reduce((m, a) => a.activeRoundTrip < m.activeRoundTrip ? a : m, baseList[0]);
+  const avgRound = Math.round(baseList.reduce((acc, a) => acc + a.activeRoundTrip, 0) / baseList.length);
   const avgMileVal = (avgRound / PLAN_CONFIG[state.plan].miles).toFixed(2);
   const plan = PLAN_CONFIG[state.plan];
 
   const el = document.getElementById("header-stats");
   el.innerHTML = `
     <div class="stat-pill">
-      <span class="stat-pill-label">必要マイル（往復）</span>
-      <span class="stat-pill-value">${plan.miles.toLocaleString()} マイル</span>
+      <span class="stat-pill-label">必要マイル（運航対象空港）</span>
+      <span class="stat-pill-value">${plan.miles.toLocaleString()}m <small style="font-size:0.75rem;">(${opMetrics.length}/35空港)</small></span>
     </div>
     <div class="stat-pill">
-      <span class="stat-pill-label">全35空港 平均往復（1m価値）</span>
+      <span class="stat-pill-label">対象${opMetrics.length}空港 平均往復</span>
       <span class="stat-pill-value">${fmtYen(avgRound)} <small style="font-size:0.75rem;">(${avgMileVal}円/m)</small></span>
     </div>
     <div class="stat-pill">
@@ -967,8 +1181,8 @@ function renderSimulator() {
             往復 ${fmtYen(ap.activeRoundTrip)}
             <span style="color: #c8102e; margin-left: 4px;">(1m=${ap.mileValue.toFixed(1)}円)</span>
           </div>
-          <div style="font-size: 0.7rem; color: var(--text-muted); margin-top: 2px;">
-            ✈️ 通常特典 ${ap.stdAwardRound.toLocaleString()}m / ${fmtMins(ap.mins)}
+          <div style="font-size: 0.68rem; color: var(--text-muted); margin-top: 2px;">
+            🛫 ${ap.outTimes}<br>🛬 ${ap.inTimes}
           </div>
           <a href="${guideUrl}" target="_blank" rel="noopener noreferrer" class="slot-timetable-link" title="${ap.name}空港のJAL空港案内を別タブで開く">
             🛫 ${ap.name}空港 JAL案内 ↗
@@ -998,7 +1212,7 @@ function renderSimulator() {
             🎉 <strong>行き先決定シミュレーション結果：「${winAp.name}空港（${winAp.code}）」（${winAp.area}・${winAp.pref}）</strong> に決まりました！
             <div style="font-size: 0.78rem; font-weight: 500; opacity: 0.95; margin-top: 2px;">
               往復運賃目安 ${fmtYen(winAp.activeRoundTrip)}（<strong>1マイル＝${winAp.mileValue.toFixed(2)}円相当</strong> ／ 通常特典より<strong>${winAp.savedMiles.toLocaleString()}マイル節約</strong>）<br>
-              💡 ${winAp.tip}
+              🕒 往路（羽田発）: ${winAp.outTimes} ／ 復路（羽田着）: ${winAp.inTimes}
             </div>
           </div>
           <div style="display:flex; gap:6px; align-items:center;">
@@ -1018,8 +1232,8 @@ function renderSimulator() {
     resultContainer.innerHTML = `
       <div style="background: var(--bg-subtle); border-radius: 12px; padding: 16px; color: var(--text-sub); font-size: 0.86rem; line-height: 1.6;">
         💡 <strong>使い方：</strong><br>
-        1. 右上の「<strong>🎲 ランダムに4空港ガチャを引く</strong>」ボタンを押すか、<strong>右の日本地図の空港ドット</strong>・下の空港カードをクリックして4空港を選びます。<br>
-        2. 選ばれた4空港が<strong>日本全国フライトマップ</strong>上に番号付きでピン留めされ、期待運賃・1マイル価値・節約マイル数が自動計算されます！
+        1. 上のパネルで<strong>往路出発時間帯・復路到着時間帯（5枠＋指定なし）</strong>を選ぶと、その時間帯に運航していない路線が自動的に候補から除外されます。<br>
+        2. 「<strong>🎲 条件に合う空港から4空港ガチャを引く</strong>」ボタンを押すか、地図・空港カードをクリックして4空港を選ぶと、期待値と1マイル単価が自動計算されます！
       </div>
     `;
     return;
@@ -1036,7 +1250,6 @@ function renderSimulator() {
   const minAp = selectedAirports.reduce((m, s) => s.activeRoundTrip < m.activeRoundTrip ? s : m, selectedAirports[0]);
   const maxAp = selectedAirports.reduce((m, s) => s.activeRoundTrip > m.activeRoundTrip ? s : m, selectedAirports[0]);
 
-  // 総合判定（セイバー運賃ベース）
   const avgBaseSaverRound = selectedAirports.reduce((a, s) => a + s.saverOneWay * 2, 0) / selectedAirports.length;
   let verdictTitle = "Aランク：好条件フライトセット";
   let verdictSub = "十分高コスパ！行きたい都市があれば申し込み推奨";
@@ -1056,13 +1269,12 @@ function renderSimulator() {
     verdictBg = "var(--rank-c)";
   }
 
-  // 近距離空港チェック（名古屋・小松・伊丹・関西・山形）
   const closeAirports = selectedAirports.filter(a => ["ngo", "kmq", "itm", "kix", "gaj"].includes(a.id));
   const ssrAirports = selectedAirports.filter(a => ["isg", "mmy", "ueo", "oka", "asj", "mmb", "kuh"].includes(a.id));
   let adviceText = "";
   if (closeAirports.length > 0) {
     const names = closeAirports.map(a => `<strong>${a.name}（${a.code}）</strong>`).join("・");
-    adviceText = `⚠️ 候補に近距離路線の ${names} が含まれています。「せっかく7,000マイル使うなら遠くへ飛びたい」場合は、出発時間帯を変えて再検索するのがおすすめです。`;
+    adviceText = `⚠️ 候補に近距離路線の ${names} が含まれています。「往路：09:00～11:59 × 復路：12:00～15:59」などに時間帯を変更すると、中部・山形・関西は運航がないため候補から完全に外せます。`;
   } else if (ssrAirports.length >= 2) {
     const names = ssrAirports.map(a => `<strong>${a.name}（${a.code}）</strong>`).join("・");
     adviceText = `🔥 超大当たり枠の ${names} が複数入った激アツ組み合わせです！最低でも<strong>${minAp.name}空港（往復${fmtYen(minAp.activeRoundTrip)} / 1マイル=${minAp.mileValue.toFixed(1)}円）</strong>が確定します。`;
@@ -1094,6 +1306,44 @@ function renderSimulator() {
       </div>
     </div>
     <div class="sim-advice">${adviceText}</div>
+  `;
+}
+
+// 5枠のミニ時間帯バッジHTML生成（空港カード用）
+function renderScheduleMatrixHtml(ap) {
+  const outPills = TIME_SLOTS_ORDER.map(slotKey => {
+    const hasFlight = ap.outSlots.includes(slotKey);
+    const isMatched = state.outTimeSlot === slotKey && hasFlight;
+    const cls = [
+      "slot-pill-mini",
+      hasFlight ? "has-flight-out" : "",
+      isMatched ? "matched-active" : ""
+    ].filter(Boolean).join(" ");
+    return `<span class="${cls}" title="往路（羽田発）${TIME_SLOT_META[slotKey].label}: ${hasFlight ? "運航あり" : "運航なし"}">${TIME_SLOT_META[slotKey].short}</span>`;
+  }).join("");
+
+  const inPills = TIME_SLOTS_ORDER.map(slotKey => {
+    const hasFlight = ap.inSlots.includes(slotKey);
+    const isMatched = state.inTimeSlot === slotKey && hasFlight;
+    const cls = [
+      "slot-pill-mini",
+      hasFlight ? "has-flight-in" : "",
+      isMatched ? "matched-active" : ""
+    ].filter(Boolean).join(" ");
+    return `<span class="${cls}" title="復路（羽田着）${TIME_SLOT_META[slotKey].label}: ${hasFlight ? "運航あり" : "運航なし"}">${TIME_SLOT_META[slotKey].short}</span>`;
+  }).join("");
+
+  return `
+    <div class="schedule-matrix">
+      <div class="schedule-row">
+        <span class="schedule-row-label" title="${ap.outTimes}">🛫 往路羽田発</span>
+        <div class="slot-pills-mini">${outPills}</div>
+      </div>
+      <div class="schedule-row">
+        <span class="schedule-row-label" title="${ap.inTimes}">🛬 復路羽田着</span>
+        <div class="slot-pills-mini">${inPills}</div>
+      </div>
+    </div>
   `;
 }
 
@@ -1143,9 +1393,7 @@ function renderAirportCardHtml(ap, rankMap) {
           <span><strong>-${ap.savedMiles.toLocaleString()}m節約</strong> (${ap.mileSaveRate.toFixed(0)}%OFF)</span>
         </div>
 
-        <div class="discount-bar-wrap" title="マイル価値 ${ap.mileValue.toFixed(2)}円/マイル">
-          <div class="discount-bar-fill" style="width: ${Math.min(100, (ap.mileValue / 9.0) * 100)}%; background: ${areaMeta.color};"></div>
-        </div>
+        ${renderScheduleMatrixHtml(ap)}
 
         <div class="station-meta">
           <span>✈️ 区間 ${ap.distMiles} マイル（${ap.flights}）</span>
@@ -1193,7 +1441,7 @@ function renderByAreaView(airports, rankMap) {
         <div class="line-header" style="background: ${meta.color};">
           <div>
             <div class="line-header-left">
-              <h2 class="line-title">${areaName}エリア（${areaAirports.length}空港）</h2>
+              <h2 class="line-title">${areaName}エリア（運航対象 ${areaAirports.length}空港）</h2>
               <span class="line-train-tag">主な機材：${meta.aircraft}</span>
               <a href="${JAL_TIMETABLE_URL}" target="_blank" rel="noopener noreferrer" class="line-tokyo-timetable-btn" title="JAL国内線公式時刻表を開く">
                 🕒 羽田発 JAL公式時刻表 ↗
@@ -1215,7 +1463,7 @@ function renderByAreaView(airports, rankMap) {
   });
 
   if (!html) {
-    html = `<div style="background:#fff; padding:40px; text-align:center; border-radius:16px; color:var(--text-sub);">該当する空港が見つかりませんでした。検索条件を変更してください。</div>`;
+    html = `<div style="background:#fff; padding:40px; text-align:center; border-radius:16px; color:var(--text-sub);">指定された時間帯・検索条件に該当する運航路線がありません。時間帯または検索条件を変更してください。</div>`;
   }
 
   container.innerHTML = html;
@@ -1253,11 +1501,11 @@ function renderRankingTableView(airports, rankMap) {
         <td style="font-weight:800; font-size:1rem;">${fmtYen(ap.activeRoundTrip)}</td>
         <td>
           <span style="font-weight:800; color:#c8102e; font-size:0.95rem;">1m = ${ap.mileValue.toFixed(2)}円</span>
-          <div style="font-size:0.72rem; color:var(--text-muted);">実質 +${fmtYen(ap.cashSavings)} 相当</div>
+          <div style="font-size:0.72rem; color:#059669; font-weight:700;">通常比 -${ap.savedMiles.toLocaleString()}m (${ap.mileSaveRate.toFixed(0)}%OFF)</div>
         </td>
-        <td>
-          <span style="font-weight:800; color:#059669;">-${ap.savedMiles.toLocaleString()}m (${ap.mileSaveRate.toFixed(0)}%OFF)</span>
-          <div style="font-size:0.72rem; color:var(--text-muted);">通常往復 ${ap.stdAwardRound.toLocaleString()} マイル</div>
+        <td style="font-size:0.72rem; color:var(--text-sub);">
+          <div>🛫 <strong>往路:</strong> ${ap.outTimes}</div>
+          <div style="margin-top:2px;">🛬 <strong>復路:</strong> ${ap.inTimes}</div>
         </td>
         <td style="font-size:0.8rem; color:var(--text-sub);">
           ${ap.distMiles} マイル<br>
@@ -1280,7 +1528,7 @@ function renderRankingTableView(airports, rankMap) {
   container.innerHTML = `
     <div class="ranking-table-wrap">
       <div style="padding: 12px 16px; background: var(--bg-subtle); border-bottom: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
-        <span style="font-size: 0.84rem; font-weight: 700; color: var(--text-sub);">🏆 羽田発・全35空港 お得度・マイル単価比較一覧</span>
+        <span style="font-size: 0.84rem; font-weight: 700; color: var(--text-sub);">🏆 羽田発・運航対象 ${airports.length}空港 お得度・発着時間帯比較一覧</span>
         <div style="display:flex; gap:8px; flex-wrap:wrap;">
           <a href="${JAL_DOKOKANI_URL}" target="_blank" rel="noopener noreferrer" class="line-tokyo-timetable-btn" style="font-size: 0.78rem; padding: 5px 12px;">
             ✈️ JAL「どこかにマイル」公式ページ ↗
@@ -1299,8 +1547,8 @@ function renderRankingTableView(airports, rankMap) {
             <th>就航エリア</th>
             <th>片道（${plan.fareLabel}）</th>
             <th>往復運賃目安</th>
-            <th>1マイル価値</th>
-            <th>通常特典マイル比較</th>
+            <th>1マイル価値 / 節約マイル</th>
+            <th>羽田発着の運航時刻目安</th>
             <th>区間マイル / 時間</th>
             <th>操作・案内</th>
           </tr>
@@ -1329,10 +1577,9 @@ function renderRouteMapView(airports, rankMap) {
       const selIdx = state.selectedIds.indexOf(ap.id);
       const isSelected = selIdx >= 0;
       const isFilteredOut = !airports.some(fa => fa.id === ap.id);
-      const guideUrl = getAirportGuideUrl(ap.code);
       return `
         <div class="map-node ${isSelected ? "selected-in-sim" : ""}"
-             style="--track-color: ${meta.color}; ${isFilteredOut ? "opacity: 0.35;" : ""}"
+             style="--track-color: ${meta.color}; ${isFilteredOut ? "opacity: 0.32; cursor: not-allowed;" : ""}"
              onclick="toggleSelectAirport('${ap.id}')">
           <div class="map-node-top">
             <span>${isSelected ? `<span class="slot-num-badge" style="background:${meta.color};">${selIdx + 1}</span>` : ""}${ap.name} <small style="color:var(--text-muted); font-family:monospace;">(${ap.code})</small></span>
@@ -1342,18 +1589,19 @@ function renderRouteMapView(airports, rankMap) {
             <span>往復 <strong>${fmtYen(ap.activeRoundTrip)}</strong></span>
             <span style="color:#c8102e; font-weight:700;">1m=${ap.mileValue.toFixed(1)}円</span>
           </div>
-          <div style="font-size:0.68rem; color:var(--text-muted); margin-top:3px; display:flex; justify-content:space-between; align-items:center;">
-            <span>通常 ${ap.stdAwardRound.toLocaleString()}m (${fmtMins(ap.mins)})</span>
-            <a href="${guideUrl}" target="_blank" rel="noopener noreferrer" onclick="event.stopPropagation();" style="color:var(--jal-red-dark); font-weight:700; text-decoration:none;">🛫案内↗</a>
+          <div style="font-size:0.66rem; color:${ap.isOperating ? "var(--text-muted)" : "#dc2626"}; margin-top:3px;">
+            ${ap.isOperating ? `🛫${ap.outTimes}` : `🚫 時間帯対象外（${ap.excludeReason}）`}
           </div>
         </div>
       `;
     }).join("");
 
+    const opCount = areaAirports.filter(a => a.isOperating).length;
+
     return `
       <div class="map-line-col">
         <div class="map-col-header" style="background: ${meta.color};">
-          ${areaName}（${areaAirports.length}）
+          ${areaName}（${opCount}/${areaAirports.length}）
           <div style="font-size:0.7rem; font-weight:500; opacity:0.9; margin-top:2px;">⬆ 高単価・遠距離順</div>
         </div>
         <div class="map-track" style="--track-color: ${meta.color};">
@@ -1369,13 +1617,13 @@ function renderRouteMapView(airports, rankMap) {
         <div>
           <strong>🗾 日本全国 JALどこかにマイル就航マップ ＆ 6エリア別お得度リスト</strong>
           <div style="font-size:0.78rem; color:var(--text-muted); margin-top:2px;">
-            地図上の空港ドットまたは下のエリア別リストをクリックすると、4空港ガチャ候補として選択・比較できます。
+            選択した時間帯に運航している空港のみハイライト表示されます（運航なしの路線はグレーアウト）。
           </div>
         </div>
         <div style="display:flex; gap:10px; align-items:center; flex-wrap:wrap;">
           <label style="font-size:0.8rem; font-weight:700; cursor:pointer; display:inline-flex; align-items:center; gap:5px;">
             <input type="checkbox" ${state.showAllMapLabels ? "checked" : ""} onchange="state.showAllMapLabels = this.checked; renderAll();" />
-            地図上に全35空港名を表示
+            地図上に運航対象の全空港名を表示
           </label>
         </div>
       </div>
@@ -1401,13 +1649,15 @@ function renderRouteMapView(airports, rankMap) {
 
 // 全体再描画
 function renderAll() {
+  renderTimeFilterStatus();
   renderHeaderStats();
   renderSimulator();
 
   const filtered = getFilteredAirports();
+  const opCount = getTimeOperatingAirports().length;
   const rankMap = getFareRankMap();
 
-  document.getElementById("result-count-label").textContent = `表示中：${filtered.length} 空港 / 全35空港`;
+  document.getElementById("result-count-label").textContent = `表示中：${filtered.length} 空港（時間帯対象 ${opCount} / 全35空港）`;
 
   if (state.view === "by-area") {
     renderByAreaView(filtered, rankMap);
@@ -1440,6 +1690,28 @@ document.addEventListener("DOMContentLoaded", () => {
         state.sortBy = "fare-desc";
         document.getElementById("sort-select").value = "fare-desc";
       }
+      renderAll();
+    });
+  });
+
+  // 往路出発時間帯ボタン（5枠＋時間指定なし）
+  document.querySelectorAll("[data-out-slot]").forEach(btn => {
+    btn.addEventListener("click", () => {
+      document.querySelectorAll("[data-out-slot]").forEach(b => b.classList.remove("active"));
+      btn.classList.add("active");
+      state.outTimeSlot = btn.getAttribute("data-out-slot");
+      pruneExcludedSelectedAirports();
+      renderAll();
+    });
+  });
+
+  // 復路到着時間帯ボタン（5枠＋時間指定なし）
+  document.querySelectorAll("[data-in-slot]").forEach(btn => {
+    btn.addEventListener("click", () => {
+      document.querySelectorAll("[data-in-slot]").forEach(b => b.classList.remove("active"));
+      btn.classList.add("active");
+      state.inTimeSlot = btn.getAttribute("data-in-slot");
+      pruneExcludedSelectedAirports();
       renderAll();
     });
   });

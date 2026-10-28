@@ -222,6 +222,276 @@ body {
   background: rgba(255, 255, 255, 0.5);
 }
 
+/* Time Band Filter Panel (5 Slots + No Spec) */
+.time-filter-panel {
+  margin-top: 18px;
+  padding: 16px;
+  background: linear-gradient(135deg, #fff8f8 0%, #f8fafc 100%);
+  border: 1.5px solid #fecdd3;
+  border-radius: var(--radius-md);
+}
+
+.time-filter-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-bottom: 12px;
+}
+
+.time-filter-title {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.time-filter-title > span:first-child {
+  font-size: 0.9rem;
+  font-weight: 800;
+  color: var(--text-main);
+}
+
+.time-filter-sub {
+  font-size: 0.74rem;
+  color: var(--text-sub);
+}
+
+.time-preset-group {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.preset-label {
+  font-size: 0.74rem;
+  font-weight: 700;
+  color: var(--text-sub);
+}
+
+.preset-chip {
+  border: 1px solid #cbd5e1;
+  background: #ffffff;
+  color: var(--text-main);
+  font-size: 0.72rem;
+  font-weight: 700;
+  padding: 4px 9px;
+  border-radius: 999px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.preset-chip:hover {
+  border-color: var(--jal-red);
+  color: var(--jal-red-dark);
+  background: #fff1f2;
+}
+
+.time-selectors-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  gap: 14px;
+}
+
+.time-selector-box {
+  background: #ffffff;
+  border: 1px solid var(--border-color);
+  border-radius: 10px;
+  padding: 10px 12px;
+}
+
+.time-selector-label {
+  font-size: 0.78rem;
+  color: var(--text-main);
+  margin-bottom: 8px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.dir-badge {
+  font-size: 0.68rem;
+  font-weight: 800;
+  padding: 2px 7px;
+  border-radius: 5px;
+  color: #fff;
+}
+
+.dir-out {
+  background: var(--jal-red);
+}
+
+.dir-in {
+  background: #0284c7;
+}
+
+.time-slot-buttons {
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  gap: 5px;
+}
+
+@media (max-width: 640px) {
+  .time-slot-buttons {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+.time-slot-btn {
+  border: 1.5px solid var(--border-color);
+  background: #f8fafc;
+  color: var(--text-sub);
+  border-radius: 7px;
+  padding: 6px 4px;
+  font-size: 0.72rem;
+  font-weight: 800;
+  cursor: pointer;
+  text-align: center;
+  line-height: 1.2;
+  transition: all 0.15s ease;
+}
+
+.time-slot-btn small {
+  display: block;
+  font-size: 0.64rem;
+  font-weight: 600;
+  opacity: 0.85;
+  margin-top: 2px;
+}
+
+.time-slot-btn:hover:not(.active) {
+  border-color: #94a3b8;
+  background: #ffffff;
+  color: var(--text-main);
+}
+
+#outbound-time-btns .time-slot-btn.active {
+  background: var(--jal-red);
+  border-color: var(--jal-red);
+  color: #ffffff;
+  box-shadow: 0 2px 6px rgba(200, 16, 46, 0.25);
+}
+
+#inbound-time-btns .time-slot-btn.active {
+  background: #0284c7;
+  border-color: #0284c7;
+  color: #ffffff;
+  box-shadow: 0 2px 6px rgba(2, 132, 199, 0.25);
+}
+
+.time-filter-status {
+  margin-top: 12px;
+  padding: 10px 12px;
+  border-radius: 8px;
+  background: #ffffff;
+  border: 1px solid var(--border-color);
+  font-size: 0.78rem;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.time-status-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.excluded-airports-wrap {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+  align-items: center;
+  padding-top: 6px;
+  border-top: 1px dashed var(--border-color);
+}
+
+.excluded-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  font-size: 0.69rem;
+  font-weight: 700;
+  background: #f1f5f9;
+  color: #64748b;
+  padding: 2px 7px;
+  border-radius: 999px;
+  border: 1px solid #cbd5e1;
+}
+
+.excluded-chip .reason-tag {
+  font-size: 0.63rem;
+  color: #dc2626;
+  font-weight: 800;
+}
+
+/* Card Flight Schedule Slots Matrix */
+.schedule-matrix {
+  background: #f8fafc;
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  padding: 7px 9px;
+  margin-bottom: 10px;
+  font-size: 0.7rem;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.schedule-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
+}
+
+.schedule-row-label {
+  font-weight: 800;
+  color: var(--text-sub);
+  white-space: nowrap;
+  font-size: 0.68rem;
+  min-width: 62px;
+}
+
+.slot-pills-mini {
+  display: flex;
+  gap: 3px;
+  flex: 1;
+  justify-content: flex-end;
+}
+
+.slot-pill-mini {
+  padding: 1px 4px;
+  border-radius: 4px;
+  font-size: 0.62rem;
+  font-weight: 700;
+  background: #e2e8f0;
+  color: #94a3b8;
+  text-align: center;
+  min-width: 34px;
+}
+
+.slot-pill-mini.has-flight-out {
+  background: #fee2e2;
+  color: #990a22;
+  border: 1px solid #fca5a5;
+}
+
+.slot-pill-mini.has-flight-in {
+  background: #e0f2fe;
+  color: #0369a1;
+  border: 1px solid #7dd3fc;
+}
+
+.slot-pill-mini.matched-active {
+  background: #16a34a !important;
+  color: #ffffff !important;
+  border-color: #16a34a !important;
+}
+
 .filter-row {
   display: flex;
   flex-wrap: wrap;

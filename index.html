@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>JAL どこかにマイル 羽田発・全35空港 行き先お得度＆マイル単価チェッカー</title>
+  <title>JAL どこかにマイル 羽田発・全35空港 行き先お得度＆時間帯絞り込みチェッカー</title>
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
@@ -13,9 +13,9 @@
     <div class="header-inner">
       <div>
         <div class="brand-badge">✈️ JALマイレージバンク 国内線特典航空券ガチャ攻略ツール</div>
-        <h1 class="brand-title">どこかにマイル 行き先お得度＆マイル価値チェッカー</h1>
+        <h1 class="brand-title">どこかにマイル 行き先お得度＆時間帯攻略チェッカー</h1>
         <p class="brand-subtitle">
-          東京（羽田）発・対象<strong>全6エリア35空港</strong>の航空券運賃（片道・往復）、通常特典マイル比較、1マイル価値、4空港ガチャ期待値を一目で比較
+          東京（羽田）発・対象<strong>全6エリア35空港</strong>の運賃、1マイル価値、<strong>往路出発・復路到着時間帯（5枠＋指定なし）による候補絞り込み</strong>を一目で比較
         </p>
       </div>
       <div class="header-stats" id="header-stats">
@@ -70,6 +70,98 @@
 
       </div>
 
+      <!-- 🕒 どこかにマイル公式仕様：往路出発時間帯 ＆ 復路到着時間帯（5枠＋指定なし） -->
+      <div class="time-filter-panel" aria-label="往路出発時間と復路到着時間の選択">
+        <div class="time-filter-header">
+          <div class="time-filter-title">
+            <span>🕒 発着時間帯の指定（5枠＋時間指定なし）</span>
+            <span class="time-filter-sub">※指定した時間帯に羽田便が飛んでいない路線は、検索＆ガチャ対象から自動的に除外されます</span>
+          </div>
+          <div class="time-preset-group">
+            <span class="preset-label">💡 攻略プリセット：</span>
+            <button type="button" class="preset-chip" onclick="applyTimePreset('all', 'all')">🔄 指定なし（全35空港）</button>
+            <button type="button" class="preset-chip" onclick="applyTimePreset('t1', 't5')">🌺 宮古・石垣・道東狙い（往路05-08 / 復路19-23）</button>
+            <button type="button" class="preset-chip" onclick="applyTimePreset('t2', 't4')">🏝️ 奄美・久米島狙い（往路09-11 / 復路16-18）</button>
+            <button type="button" class="preset-chip" onclick="applyTimePreset('t2', 't3')">🚫 近距離除外（往路09-11 / 復路12-15）</button>
+          </div>
+        </div>
+
+        <div class="time-selectors-grid">
+          <!-- 往路：羽田出発時間帯 -->
+          <div class="time-selector-box">
+            <div class="time-selector-label">
+              <span class="dir-badge dir-out">往路</span>
+              <strong>東京（羽田）出発時間帯</strong>
+            </div>
+            <div class="time-slot-buttons" id="outbound-time-btns" role="group" aria-label="往路出発時間帯">
+              <button type="button" class="time-slot-btn active" data-out-slot="all">
+                時間指定なし
+                <small>全時間帯</small>
+              </button>
+              <button type="button" class="time-slot-btn" data-out-slot="t1">
+                05:00～08:59
+                <small>早朝発</small>
+              </button>
+              <button type="button" class="time-slot-btn" data-out-slot="t2">
+                09:00～11:59
+                <small>午前発</small>
+              </button>
+              <button type="button" class="time-slot-btn" data-out-slot="t3">
+                12:00～15:59
+                <small>午後発</small>
+              </button>
+              <button type="button" class="time-slot-btn" data-out-slot="t4">
+                16:00～18:59
+                <small>夕方発</small>
+              </button>
+              <button type="button" class="time-slot-btn" data-out-slot="t5">
+                19:00～23:59
+                <small>夜間発</small>
+              </button>
+            </div>
+          </div>
+
+          <!-- 復路：羽田到着時間帯 -->
+          <div class="time-selector-box">
+            <div class="time-selector-label">
+              <span class="dir-badge dir-in">復路</span>
+              <strong>東京（羽田）到着時間帯</strong>
+            </div>
+            <div class="time-slot-buttons" id="inbound-time-btns" role="group" aria-label="復路到着時間帯">
+              <button type="button" class="time-slot-btn active" data-in-slot="all">
+                時間指定なし
+                <small>全時間帯</small>
+              </button>
+              <button type="button" class="time-slot-btn" data-in-slot="t1">
+                05:00～08:59
+                <small>早朝着</small>
+              </button>
+              <button type="button" class="time-slot-btn" data-in-slot="t2">
+                09:00～11:59
+                <small>午前着</small>
+              </button>
+              <button type="button" class="time-slot-btn" data-in-slot="t3">
+                12:00～15:59
+                <small>午後着</small>
+              </button>
+              <button type="button" class="time-slot-btn" data-in-slot="t4">
+                16:00～18:59
+                <small>夕方着</small>
+              </button>
+              <button type="button" class="time-slot-btn" data-in-slot="t5">
+                19:00～23:59
+                <small>夜間着</small>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- 時間帯フィルタによる対象空港・除外空港ステータス表示 -->
+        <div id="time-filter-status" class="time-filter-status">
+          <!-- JSで動的に描画 -->
+        </div>
+      </div>
+
       <!-- エリアフィルタ・検索・並び替え -->
       <div class="filter-row">
         <div class="line-pills" role="group" aria-label="就航エリアフィルタ">
@@ -118,7 +210,7 @@
         </div>
         <div class="sim-actions">
           <button type="button" class="btn-action btn-gacha" id="btn-random-gacha">
-            🎲 ランダムに4空港ガチャを引く
+            🎲 条件に合う空港から4空港ガチャを引く
           </button>
           <button type="button" class="btn-action btn-final-draw" id="btn-final-draw" style="display: none;">
             ✈️ この4空港から1空港を抽選！
@@ -145,7 +237,7 @@
           <div class="sim-map-header">
             <div class="sim-map-title">
               🗾 日本全国 行き先候補フライトマップ
-              <span style="font-size: 0.72rem; font-weight: 500; color: var(--text-muted);">（地図上の空港クリックでも選択可）</span>
+              <span style="font-size: 0.72rem; font-weight: 500; color: var(--text-muted);">（運航対象空港をクリックで選択可）</span>
             </div>
           </div>
           <div class="geo-svg-wrap" id="sim-geo-map-container">
@@ -168,11 +260,11 @@
 
     <!-- 補足・ルール解説 -->
     <aside class="info-box">
-      <h3>📌 JAL「どこかにマイル」（羽田発）の運賃・必要マイル・攻略ポイント</h3>
+      <h3>📌 JAL「どこかにマイル」（羽田発）の時間帯絞り込み＆攻略ポイント</h3>
       <ul>
-        <li><strong>往復一律 7,000マイルの圧倒的コスパ：</strong>通常のJAL国内線特典航空券では、羽田〜沖縄（那覇）が往復<strong>19,000マイル〜</strong>、羽田〜石垣・宮古が往復<strong>21,000マイル〜</strong>、羽田〜札幌・福岡が往復<strong>17,000マイル〜</strong>必要ですが、「どこかにマイル」ならどの空港が当たっても<strong>往復7,000マイル（最大66.7%マイル削減）</strong>で発券できます。</li>
-        <li><strong>1マイル＝5円〜10円超の超高単価：</strong>有償航空券（セイバー運賃）でも往復4万円〜6万円台になる<strong>石垣・宮古・奄美大島・女満別・釧路</strong>などが当たれば、1マイルの価値は<strong>7円〜9円以上</strong>（直前フレックス運賃基準なら<strong>1マイル＝12円超</strong>）に跳ね上がります。</li>
-        <li><strong>4空港ガチャの引き直し（再検索）テクニック：</strong>検索時に提示された4つの候補空港が気に入らない場合は再検索が可能です（1日の検索回数上限あり）。出発時間帯（午前・午後など）を少し変えて検索すると、空席状況の違いから<strong>沖縄・北海道・九州などの遠距離空港</strong>が混ざりやすくなります。</li>
+        <li><strong>往路出発・復路到着の「5枠＋時間指定なし」で候補をコントロール：</strong>どこかにマイルでは、往路の羽田出発時間と復路の羽田到着時間をそれぞれ5つの時間帯（<code>05:00～08:59</code> / <code>09:00～11:59</code> / <code>12:00～15:59</code> / <code>16:00～18:59</code> / <code>19:00～23:59</code>）または<code>時間帯指定なし</code>から選べます。<strong>その時間帯に直行便が運航していない空港は絶対に候補に出ない</strong>ため、時間帯選びが最大の攻略法になります。</li>
+        <li><strong>離島・道東の1日1〜3往復路線を狙い撃つ：</strong>例えば<strong>宮古空港（1日1往復）</strong>は往路<code>05:00～08:59</code>・復路<code>19:00～23:59</code>のみ、<strong>奄美大島（1日1往復）</strong>は往路<code>09:00～11:59</code>・復路<code>16:00～18:59</code>のみ運航しています。狙いたい空港の運航時間帯に合わせる（または<code>時間指定なし</code>にする）のが鉄則です。</li>
+        <li><strong>近距離路線（中部・山形・関西など）を除外するテクニック：</strong>例えば名古屋（中部）や山形は往路が<code>05:00～08:59</code>と<code>16:00～18:59</code>にしかないため、往路を<code>09:00～11:59</code>または<code>12:00～15:59</code>にするだけで候補から完全に除外できます。</li>
         <li><strong>当日空港でのアップグレードも可能：</strong>「どこかにマイル」は普通席での予約ですが、搭乗当日に空港で空席があれば、追加料金（＋1,100円〜3,300円）で<strong>クラスJ</strong>、または<strong>ファーストクラス</strong>への当日アップグレードも利用可能です。</li>
       </ul>
     </aside>
