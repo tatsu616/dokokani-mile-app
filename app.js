@@ -951,8 +951,9 @@ function buildGeoMapSvg({ isLarge = false, showAllNames = false } = {}) {
   }).join("");
 
   const insetDivider = `
-    <path d="M24,615 L335,615 L365,645 L365,768" fill="none" stroke="#94a3b8" stroke-width="1.3" stroke-dasharray="5 4" opacity="0.7" />
-    <text x="34" y="632" font-size="10.5" font-weight="800" fill="#64748b">🌺 奄美・沖縄・先島諸島エリア</text>
+    <path d="M286,768 L286,612 L316,582 L626,582 L626,768 Z" fill="rgba(255,255,255,0.28)" stroke="none" />
+    <path d="M286,768 L286,612 L316,582 L626,582" fill="none" stroke="#94a3b8" stroke-width="1.5" stroke-dasharray="5 4" opacity="0.85" />
+    <text x="322" y="600" font-size="10.5" font-weight="800" fill="#64748b">🌺 奄美・沖縄・先島諸島エリア</text>
   `;
 
   // 2. 全35空港へのベースフライトアーク（時間帯対象外の路線は極薄点線に）
