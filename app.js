@@ -383,6 +383,14 @@ const AIRPORTS = [
   }
 ];
 
+// 2026年11月2日〜12月1日 期間限定「3箇所から選ぶ」キャンペーン期間判定（JST基準）
+const CAMPAIGN_3_START = new Date("2026-11-02T00:00:00+09:00");
+const CAMPAIGN_3_END = new Date("2026-12-01T23:59:59+09:00");
+
+function isThreeCandidateCampaignPeriod(now = new Date()) {
+  return now >= CAMPAIGN_3_START && now <= CAMPAIGN_3_END;
+}
+
 // 状態管理
 const state = {
   plan: "saver",        // "saver" (7000m), "flex" (7000m), "southern" (6000m)
@@ -392,8 +400,10 @@ const state = {
   areaFilter: "all",
   searchQuery: "",
   sortBy: "area",       // "area", "fare-desc", "fare-asc", "miles-desc", "dist-desc", "time-asc"
-  selectedIds: [],      // 最大4空港
-  winnerId: null,       // 4空港から1空港抽選された決定空港ID
+  candidateLimit: isThreeCandidateCampaignPeriod() ? 3 : 4, // 2026/11/2〜12/1は自動で3箇所、手動切替も可
+  isCampaignPeriodAuto: isThreeCandidateCampaignPeriod(),
+  selectedIds: [],      // 最大3または4空港（candidateLimitに連動）
+  winnerId: null,       // 候補空港から1空港抽選された決定空港ID
   showAllMapLabels: false,
   // 地図の拡大縮小・パン状態（基準座標系: 640 x 780）
   mapZoom: 1.0,
@@ -798,17 +808,39 @@ function getFareRankMap() {
   return rankMap;
 }
 
-// 4空港シミュレーターへの追加/解除（運航対象外の空港は追加不可）
+// 候補空港数（3箇所キャンペーン / 通常4箇所）の切替
+function setCandidateLimit(limit) {
+  const newLimit = limit === 3 ? 3 : 4;
+  state.candidateLimit = newLimit;
+  if (state.selectedIds.length > newLimit) {
+    state.selectedIds = state.selectedIds.slice(0, newLimit);
+    if (state.winnerId && !state.selectedIds.includes(state.winnerId)) {
+      state.winnerId = null;
+    }
+  } else if (state.selectedIds.length === 3 && newLimit === 4) {
+    // 3箇所選択済みの状態から4箇所モードへ切り替えた場合、未選択の運航対象空港から1空港追加して4枠埋める
+    const pool = getTimeOperatingAirports().filter(a => !state.selectedIds.includes(a.id));
+    if (pool.length > 0) {
+      const r = Math.floor(Math.random() * pool.length);
+      state.selectedIds.push(pool[r].id);
+      state.winnerId = null;
+    }
+  }
+  renderAll();
+}
+
+// 3空港/4空港シミュレーターへの追加/解除（運航対象外の空港は追加不可）
 function toggleSelectAirport(id) {
   const rawAp = AIRPORTS.find(a => a.id === id);
   if (rawAp && !checkAirportTimeOperation(rawAp).isOperating) {
     return;
   }
+  const limit = state.candidateLimit || 4;
   const idx = state.selectedIds.indexOf(id);
   if (idx >= 0) {
     state.selectedIds.splice(idx, 1);
   } else {
-    if (state.selectedIds.length >= 4) {
+    if (state.selectedIds.length >= limit) {
       state.selectedIds.shift();
     }
     state.selectedIds.push(id);
@@ -817,11 +849,12 @@ function toggleSelectAirport(id) {
   renderAll();
 }
 
-// ランダム4空港ガチャを引く（現在選択中の往路・復路時間帯に運航している空港プールからのみ抽選！）
+// ランダムガチャを引く（現在選択中の往路・復路時間帯に運航している空港プールからのみ3箇所または4箇所を抽選！）
 function drawRandomGacha() {
+  const limit = state.candidateLimit || 4;
   const pool = getTimeOperatingAirports();
   const picked = [];
-  while (picked.length < 4 && pool.length > 0) {
+  while (picked.length < limit && pool.length > 0) {
     const r = Math.floor(Math.random() * pool.length);
     picked.push(pool.splice(r, 1)[0].id);
   }
@@ -1147,31 +1180,69 @@ function renderHeaderStats() {
   `;
 }
 
-// 4空港ガチャ期待値シミュレーター＋日本地図の描画
+// 3空港/4空港ガチャ期待値シミュレーター＋日本地図の描画
 function renderSimulator() {
+  const limit = state.candidateLimit || 4;
   const simSec = document.getElementById("simulator-section");
   const slotsContainer = document.getElementById("sim-slots");
   const winnerContainer = document.getElementById("sim-winner-area");
   const resultContainer = document.getElementById("sim-result-area");
   const countBadge = document.getElementById("sim-count-badge");
+  const mainTitle = document.getElementById("sim-main-title");
+  const gachaBtn = document.getElementById("btn-random-gacha");
   const finalDrawBtn = document.getElementById("btn-final-draw");
   const mapContainer = document.getElementById("sim-geo-map-container");
+  const campaignBar = document.getElementById("campaign-mode-bar");
+  const campaignBadge = document.getElementById("campaign-status-badge");
+
+  // キャンペーン切替バーのアクティブ状態とステータス表示を更新
+  if (campaignBar) {
+    campaignBar.classList.toggle("mode-4", limit === 4);
+  }
+  if (campaignBadge) {
+    if (state.isCampaignPeriodAuto) {
+      campaignBadge.textContent = limit === 3
+        ? "🎉 2026/11/2〜12/1 キャンペーン期間中（3箇所モード適用中）"
+        : "✈️ 期間中ですが手動で通常4箇所モード表示中";
+      campaignBadge.classList.toggle("outside-period", limit === 4);
+    } else {
+      campaignBadge.textContent = limit === 3
+        ? "🎁 3箇所キャンペーンモード（プレビュー表示中）"
+        : "📅 通常期間（4箇所モード自動適用）";
+      campaignBadge.classList.toggle("outside-period", limit === 4);
+    }
+  }
+  document.querySelectorAll("[data-cand-count]").forEach(btn => {
+    btn.classList.toggle("active", Number(btn.getAttribute("data-cand-count")) === limit);
+  });
 
   const selectedAirports = state.selectedIds
+    .slice(0, limit)
     .map(id => AIRPORTS.find(a => a.id === id))
     .filter(Boolean)
     .map(a => computeAirportMetrics(a, state.plan));
 
   simSec.classList.toggle("has-selection", selectedAirports.length > 0);
-  countBadge.textContent = `${selectedAirports.length} / 4 空港選択中`;
+  slotsContainer.classList.toggle("slots-3", limit === 3);
+
+  if (mainTitle) {
+    mainTitle.textContent = limit === 3
+      ? "🎯 3空港ガチャ期待値シミュレーター ＆ 全国フライトマップ（期間限定3箇所キャンペーン）"
+      : "🎯 4空港ガチャ期待値シミュレーター ＆ 全国フライトマップ";
+  }
+  countBadge.textContent = `${selectedAirports.length} / ${limit} 空港選択中（当選確率 約${(100 / limit).toFixed(1)}%）`;
+  if (gachaBtn) {
+    gachaBtn.textContent = `🎲 条件に合う空港から${limit}空港ガチャを引く`;
+  }
   finalDrawBtn.style.display = selectedAirports.length >= 2 ? "inline-flex" : "none";
+  finalDrawBtn.textContent = `✈️ この${selectedAirports.length}空港から1空港を抽選！`;
 
   // 日本全国フライトマップのSVG描画
   mapContainer.innerHTML = buildGeoMapSvg({ isLarge: false, showAllNames: false });
 
-  // 4つのスロット描画
+  // 3つまたは4つのスロット描画
   let slotsHtml = "";
-  for (let i = 0; i < 4; i++) {
+  for (let i = 0; i < limit; i++) {
     const ap = selectedAirports[i];
     if (ap) {
       const areaColor = AREA_META[ap.area].color;
@@ -1205,7 +1276,7 @@ function renderSimulator() {
       slotsHtml += `
         <div class="sim-slot">
           <div class="sim-slot-empty">
-            候補空港 ${i + 1}<br>
+            候補空港 ${i + 1} / ${limit}<br>
             <span style="font-size: 0.72rem; font-weight: 400;">地図またはカードをクリック</span>
           </div>
         </div>
@@ -1221,7 +1292,7 @@ function renderSimulator() {
       winnerContainer.innerHTML = `
         <div class="winner-banner">
           <div>
-            🎉 <strong>行き先決定シミュレーション結果：「${winAp.name}空港（${winAp.code}）」（${winAp.area}・${winAp.pref}）</strong> に決まりました！
+            🎉 <strong>行き先決定シミュレーション結果（${selectedAirports.length}択抽選）：「${winAp.name}空港（${winAp.code}）」（${winAp.area}・${winAp.pref}）</strong> に決まりました！
             <div style="font-size: 0.78rem; font-weight: 500; opacity: 0.95; margin-top: 2px;">
               往復運賃目安 ${fmtYen(winAp.activeRoundTrip)}（<strong>1マイル＝${winAp.mileValue.toFixed(2)}円相当</strong> ／ 通常特典より<strong>${winAp.savedMiles.toLocaleString()}マイル節約</strong>）<br>
               🕒 往路（羽田発）: ${winAp.outTimes} ／ 復路（羽田着）: ${winAp.inTimes}
@@ -1245,7 +1316,7 @@ function renderSimulator() {
       <div style="background: var(--bg-subtle); border-radius: 12px; padding: 16px; color: var(--text-sub); font-size: 0.86rem; line-height: 1.6;">
         💡 <strong>使い方：</strong><br>
         1. 上のパネルで<strong>往路出発時間帯・復路到着時間帯（5枠＋指定なし）</strong>を選ぶと、その時間帯に運航していない路線が自動的に候補から除外されます。<br>
-        2. 「<strong>🎲 条件に合う空港から4空港ガチャを引く</strong>」ボタンを押すか、地図・空港カードをクリックして4空港を選ぶと、期待値と1マイル単価が自動計算されます！
+        2. 「<strong>🎲 条件に合う空港から${limit}空港ガチャを引く</strong>」ボタンを押すか、地図・空港カードをクリックして${limit}空港を選ぶと、期待値と1マイル単価が自動計算されます！
       </div>
     `;
     return;
@@ -1273,7 +1344,7 @@ function renderSimulator() {
     verdictBg = "var(--rank-ss)";
   } else if (avgBaseSaverRound >= 37500) {
     verdictTitle = "Sランク：大当たりセット！";
-    verdictSub = "全国平均を大きく上回る1マイル5円超の優秀な4択";
+    verdictSub = `全国平均を大きく上回る1マイル5円超の優秀な${selectedAirports.length}択`;
     verdictBg = "var(--rank-s)";
   } else if (avgBaseSaverRound < 31000) {
     verdictTitle = "Cランク：近距離多め（再検索検討）";
@@ -1423,7 +1494,7 @@ function renderAirportCardHtml(ap, rankMap) {
 
       <div class="card-actions-row">
         <button type="button" class="card-select-btn" onclick="event.stopPropagation(); toggleSelectAirport('${ap.id}')">
-          ${isSelected ? `✓ 候補空港 ${selIdx + 1}（解除）` : "＋ 4空港候補に選ぶ"}
+          ${isSelected ? `✓ 候補空港 ${selIdx + 1}（解除）` : `＋ ${state.candidateLimit || 4}空港候補に選ぶ`}
         </button>
         <a href="${guideUrl}" target="_blank" rel="noopener noreferrer" class="timetable-btn" onclick="event.stopPropagation();" title="JAL「${ap.name}空港」の公式案内を開く">
           🛫 空港案内 ↗
@@ -1682,6 +1753,14 @@ function renderAll() {
 
 // イベントリスナー初期化
 document.addEventListener("DOMContentLoaded", () => {
+  // 候補空港数切替ボタン（期間限定 3箇所モード / 通常 4箇所モード）
+  document.querySelectorAll("[data-cand-count]").forEach(btn => {
+    btn.addEventListener("click", () => {
+      const count = Number(btn.getAttribute("data-cand-count"));
+      setCandidateLimit(count);
+    });
+  });
+
   // プラン切替ボタン
   document.querySelectorAll("[data-plan]").forEach(btn => {
     btn.addEventListener("click", () => {

@@ -203,19 +203,37 @@
       </div>
     </section>
 
-    <!-- 4空港ガチャ期待値シミュレーター＆日本全国フライトマップ -->
-    <section class="simulator-section" id="simulator-section" aria-label="4空港ガチャ期待値シミュレーター">
+    <!-- 3空港/4空港ガチャ期待値シミュレーター＆日本全国フライトマップ -->
+    <section class="simulator-section" id="simulator-section" aria-label="ガチャ期待値シミュレーター">
+      <!-- 期間限定 3候補キャンペーン切替バー（2026/11/2〜12/1 自動判定＋手動切替ボタン） -->
+      <div class="campaign-mode-bar" id="campaign-mode-bar">
+        <div class="campaign-mode-info">
+          <span class="campaign-period-badge" id="campaign-status-badge">🎉 キャンペーン期間中（自動適用）</span>
+          <div class="campaign-mode-text">
+            <strong>2026年11月2日〜12月1日 期間限定申込キャンペーン：</strong>通常4箇所の候補が<strong>「3箇所」</strong>になり、狙った空港の当選確率が <strong>25% → 約33.3%</strong> にアップ！
+          </div>
+        </div>
+        <div class="cand-count-toggle" role="group" aria-label="候補空港数の切替">
+          <button type="button" class="cand-toggle-btn" data-cand-count="3" id="btn-cand-3">
+            🎁 期間限定 3箇所モード <small>(確率1/3)</small>
+          </button>
+          <button type="button" class="cand-toggle-btn" data-cand-count="4" id="btn-cand-4">
+            ✈️ 通常 4箇所モード <small>(確率1/4)</small>
+          </button>
+        </div>
+      </div>
+
       <div class="sim-header">
         <div class="sim-title-wrap">
-          <h2 class="sim-title">🎯 4空港ガチャ期待値シミュレーター ＆ 全国フライトマップ</h2>
-          <span class="sim-badge" id="sim-count-badge">0 / 4 空港選択中</span>
+          <h2 class="sim-title" id="sim-main-title">🎯 3空港ガチャ期待値シミュレーター ＆ 全国フライトマップ</h2>
+          <span class="sim-badge" id="sim-count-badge">0 / 3 空港選択中</span>
         </div>
         <div class="sim-actions">
           <button type="button" class="btn-action btn-gacha" id="btn-random-gacha">
-            🎲 条件に合う空港から4空港ガチャを引く
+            🎲 条件に合う空港から3空港ガチャを引く
           </button>
           <button type="button" class="btn-action btn-final-draw" id="btn-final-draw" style="display: none;">
-            ✈️ この4空港から1空港を抽選！
+            ✈️ この3空港から1空港を抽選！
           </button>
           <button type="button" class="btn-action btn-clear" id="btn-clear-sim">
             クリア
