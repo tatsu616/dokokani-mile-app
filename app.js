@@ -935,20 +935,31 @@ function buildGeoMapSvg({ isLarge = false, showAllNames = false } = {}) {
   const hasSelection = selectedAirports.length > 0;
   const allMetrics = AIRPORTS.map(a => computeAirportMetrics(a, state.plan));
 
-  // 1. 地域ポリゴン＆地域ラベル
+  // 選択された空港が属する都道府県判定
+  const isPrefSelected = (regionName) => {
+    return selectedAirports.some(ap => {
+      if (regionName === "鹿児島県（奄美）") return ap.id === "asj";
+      if (regionName === "鹿児島県") return ap.id === "koj";
+      return ap.pref.includes(regionName);
+    });
+  };
+
+  // 1. 47都道府県ポリゴン＆エリア代表ラベル
   const regionPolys = JAPAN_MAP_REGIONS.map(r => {
-    const isSelectedArea = activeAreas.has(r.area);
+    const isSelPref = isPrefSelected(r.name);
     const cls = [
       "pref-land",
       r.isTarget ? "target-pref" : "",
-      isSelectedArea ? "active-pref" : ""
+      isSelPref ? "active-pref" : ""
     ].filter(Boolean).join(" ");
-    return `<path d="${r.d}" class="${cls}" />`;
+    return `<path d="${r.d}" class="${cls}"><title>${r.name}</title></path>`;
   }).join("");
 
-  const regionLabels = JAPAN_MAP_REGIONS.map(r => {
-    return `<text x="${r.lx}" y="${r.ly}" class="pref-label ${r.isTarget ? "target-label" : ""}">${r.name}</text>`;
-  }).join("");
+  const regionLabels = JAPAN_MAP_REGIONS
+    .filter(r => r.label)
+    .map(r => {
+      return `<text x="${r.lx}" y="${r.ly}" class="pref-label ${r.isTarget ? "target-label" : ""}">${r.label}</text>`;
+    }).join("");
 
   const insetDivider = `
     <path d="M286,768 L286,612 L316,582 L626,582 L626,768 Z" fill="rgba(255,255,255,0.28)" stroke="none" />
